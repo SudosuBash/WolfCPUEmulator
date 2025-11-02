@@ -1,0 +1,49 @@
+#ifndef __RAM_UNIT
+#define __RAM_UNIT
+
+#include "cpu/global.h"
+#include <stdint.h>
+/**
+ * 目的：模拟真实内存结构
+ *  真实内存就是一块一块的
+ */
+
+typedef struct {
+    uint8_t status_flag:5;
+    union {
+        uint8_t val1b;
+        uint16_t val2b;
+        uint32_t val4b;
+    };
+} RAM_OPERATOR_RESULT;
+
+typedef struct {
+    uint8_t opcode:2;
+    uint8_t opbytes:3; 
+    uint32_t op_x:RAM_BLOCK_MAX_POSITION;
+    uint32_t op_y:RAM_BLOCK_MAX_POSITION;
+    union {
+        uint8_t val1bIn;
+        uint16_t val2bIn;
+        uint32_t val4bIn;
+    };
+} RAM_IN_ARGS;
+
+typedef uint8_t (*RAM_BLOCK)[RAM_BLOCK_RECT_WIDTH][RAM_BLOCK_RECT_WIDTH];
+typedef RAM_BLOCK (*RAM_BLKS)[RAM_BLOCK_COUNT];
+
+typedef struct RAM_INTERFACE_UNIT RAM_INTERFACE_UNIT;
+/**
+ * 为什么这么设计:
+ *  真实电路中的RAM就是一堆输入引脚，一堆输出引脚。
+ *  这是在模拟引脚操作，in1 in2对应真实电路的引脚输入
+ *  uint32_t代表引脚输出，最多能输出4字节
+ */
+
+typedef RAM_OPERATOR_RESULT (*ram_operator_func)(RAM_INTERFACE_UNIT* unit,RAM_IN_ARGS input);
+struct RAM_INTERFACE_UNIT {
+    RAM_BLKS blocks;
+    ram_operator_func operatorFunc;
+};
+
+#endif
