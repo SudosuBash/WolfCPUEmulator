@@ -1,6 +1,46 @@
 #include "bus.h"
 
-static void wait_for_delta() {
-    uint16_t val  = 30000;
-    while(val>0) val-=1;
+uint8_t bus_send_data(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
+    data.status = BUS_STATUS_PENDING;
+    data.read_write = BUS_RW_WRITE;
+    bus_ctrl->data_cmd_collection = data;
+    bus_ctrl->addr = addr;
+
+    while(bus_ctrl->data_cmd_collection.status != BUS_STATUS_PENDING);
+
+    bus_ctrl->data_cmd_collection.be = 0;
+    bus_ctrl->data_cmd_collection.data = 0;//重置
+
+    uint8_t status = bus_ctrl->data_cmd_collection.status;
+    bus_ctrl->data_cmd_collection.status = BUS_STATUS_SUCCESS;
+    return status;
+}
+
+BUS_SEND_DATA bus_recv_data(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
+    data.status = BUS_STATUS_PENDING;
+    data.read_write = BUS_RW_READ;
+
+    bus_ctrl->data_cmd_collection = data;
+    bus_ctrl->addr = addr;
+
+    while(bus_ctrl->data_cmd_collection.status != BUS_STATUS_PENDING);
+
+    data.data = bus_ctrl->data_cmd_collection.data;
+    data.status = bus_ctrl->data_cmd_collection.status;
+
+    bus_ctrl->data_cmd_collection.be = 0;
+    bus_ctrl->data_cmd_collection.status = BUS_STATUS_SUCCESS;
+    return data;
+}
+
+WOLF_CPU_BUS_CONTROLLER* init_bus() {
+    WOLF_CPU_BUS_CONTROLLER* controller = (WOLF_CPU_BUS_CONTROLLER*)malloc(sizeof(WOLF_CPU_BUS_CONTROLLER));
+    if(controller == NULL) return NULL;
+
+    memset(controller,0,sizeof(WOLF_CPU_BUS_CONTROLLER));
+
+    controller->send_data = bus_send_data;
+    controller->recv_data = bus_recv_data;
+    //后续实现register_devices 
+    return controller;
 }

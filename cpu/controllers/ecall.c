@@ -30,10 +30,9 @@ static void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
         .data = IRQ_CMD_PROCESS_OK
     };
     cpu->bus->send_data(cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
-    wait_for_delta(); //真实电路是实时的，但是模拟器环境是线程模拟，所以只能等待一下设备循环处理
-    cpu->bus->recv_data(cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
-
-    uint8_t irqcode = 0; //此处应向总线(irq_controller)请求数据，逻辑先省略
+    BUS_SEND_DATA recv_val = cpu->bus->recv_data(cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
+    uint8_t irqcode = recv_val.data & 0xff; 
+    
     uint32_t base_addr = cpu->ecall_regs.mpc + irqcode * ECALL_SINGLE_ITEM_LENGTH;
     cpu->ecall_regs.mep = cpu->pc;
     cpu->ecall_regs.mreason = reason | 0x8000;
@@ -47,6 +46,7 @@ static void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
 
 static void eret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
+    cpu->spe_regs.bcr &= cpu->ecall_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
     cpu->pc = cpu->ecall_regs.mpc + 4; //跳过当前指令
 } 
 static void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
