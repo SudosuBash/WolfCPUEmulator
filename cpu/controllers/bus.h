@@ -17,7 +17,6 @@ typedef struct WOLF_CPU_BUS_CONTROLLER WOLF_CPU_BUS_CONTROLLER;
 typedef void (*bus_reg_device_fn)(WOLF_CPU_BUS_CONTROLLER* bus_ctrl);
 typedef void (*bus_send_data_fn)(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data);
 typedef uint32_t (*bus_recv_data_fn)(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA bits);
-    //若uint8_t的data,忽略前24位,uint16_t同上
 
 
 typedef void (*device_start_fn)(WOLF_CPU_BUS_DEVICE* device);
@@ -26,8 +25,7 @@ typedef uint32_t (*device_read_reg_fn)(WOLF_CPU_BUS_DEVICE* device,uint8_t addr)
 typedef void (*device_write_reg_fn)(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA data);
 
 struct WOLF_CPU_BUS_CONTROLLER {
-    uint8_t external_irq:1;
-    //具体中断信息存储在中断控制器中，这儿仅标识是是否发生中断了
+    uint32_t data;
     WOLF_CPU_BUS_DEVICE* devices[MAX_BUS_DEVICE];
     WOLF_CPU_BUS_DEVICE* irq_controller; //单独标出，为了便于找到CPU
     bus_send_data_fn send_data;

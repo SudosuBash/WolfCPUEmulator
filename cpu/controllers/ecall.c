@@ -1,6 +1,7 @@
 #include "ecall.h"
 #include "cpu/global.h"
 #include "cpu/cpu.h"
+#include <cpu/mmio_devices/irq_controller.h>
 #include <pthread.h>
 #include <stdlib.h>
 
@@ -17,11 +18,22 @@ static void ecall(WOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason)
     cpu->pc = base_addr;
 }
 
+
 //异步时序
-static void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl,uint8_t irqcode, uint8_t reason) {
+static void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     if(cpu->spe_regs.bcr & IRQ_DISALLOW_MASK) return;
     pthread_mutex_lock(&cpu->clock_execution); //加锁保证时序统一
+
+    BUS_SEND_DATA data = {
+        .be = 0b0001,
+        .data = IRQ_CMD_PROCESS_OK
+    };
+    cpu->bus->send_data(cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
+    wait_for_delta(); //真实电路是实时的，但是模拟器环境是线程模拟，所以只能等待一下设备循环处理
+    cpu->bus->recv_data(cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
+
+    uint8_t irqcode = 0; //此处应向总线(irq_controller)请求数据，逻辑先省略
     uint32_t base_addr = cpu->ecall_regs.mpc + irqcode * ECALL_SINGLE_ITEM_LENGTH;
     cpu->ecall_regs.mep = cpu->pc;
     cpu->ecall_regs.mreason = reason | 0x8000;

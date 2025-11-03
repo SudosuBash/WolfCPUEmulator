@@ -20,6 +20,7 @@
 #define IRQ_CMD_SET_ENABLE 0x4
 #define IRQ_CMD_PROCESS_OK 0x5
 #define IRQ_CMD_SET_PRIORITY 0x6
+#define IRQ_CMD_PROCESSING 0x7
 
 #define IRQ_STATUS_OKAY 0x0
 #define IRQ_STATUS_SUSPEND 0x1
@@ -33,6 +34,7 @@
 
 #define IRQ_IGNORED 0x1
 #define IRQ_NOT_IGNORED 0
+
 
 static const char device_name[] = "Wolf IRQ Controller";
 static const char vendor_name[] = "Wolf Emulator";
@@ -59,6 +61,7 @@ struct WOLF_IRQ_CONTROLLER {
     
     irq_trigger_fn trigger_fn;    //预留一个硬件接口,对中断作请求
     INTERRUPT_DESC registered_interrupts[IRQ_INTERRUPTS_SUM]; //48个
+    uint64_t int_valid_flag;
 };
 
 #endif

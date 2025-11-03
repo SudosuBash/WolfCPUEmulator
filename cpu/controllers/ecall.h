@@ -21,7 +21,7 @@ struct WOLF_CPU_ECALL_CONTROLLER {
     iret_caller iret_caller;
 };
 void ecall(WOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason);
-void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl,uint8_t irqcode, uint8_t reason);
+void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason);
 void eret(WOLF_CPU_ECALL_CONTROLLER* ctrl);
 void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl);
 #endif
