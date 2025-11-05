@@ -24,4 +24,7 @@ void ecall(WOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason);
 void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason);
 void eret(WOLF_CPU_ECALL_CONTROLLER* ctrl);
 void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl);
+
+WOLF_CPU_ECALL_CONTROLLER* init_ecall();
+void free_ecall(WOLF_CPU_ECALL_CONTROLLER** ecall);
 #endif

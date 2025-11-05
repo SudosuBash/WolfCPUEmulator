@@ -1,6 +1,7 @@
 #include "cache_controller.h"
 #include "cpu/logics/logic_alg.h"
 #include <stdint.h>
+#include <stddef.h>
 
 #define L1_CACHE_LINE_WRITE(cnd,line1,data) \
     do { \
@@ -238,7 +239,8 @@ uint8_t ld_cache_l2(MACHINE_L2_CACHE_GROUP* group[L1_GROUP_SIZE],uint32_t addr, 
     return 0;
 }
 
-void init_cache_controller(WOLF_CACHE_CONTROLLER* cache_controller) {
+WOLF_CACHE_CONTROLLER* init_cache_controller() {
+    WOLF_CACHE_CONTROLLER* cache_controller = (WOLF_CACHE_CONTROLLER*) malloc(sizeof(WOLF_CACHE_CONTROLLER));
     cache_controller->rd_1b_l1 = rd_1b_l1;
     cache_controller->rd_4b_l1 = rd_4b_l1;
     cache_controller->rd_2b_l1 = rd_2b_l1;
@@ -247,4 +249,12 @@ void init_cache_controller(WOLF_CACHE_CONTROLLER* cache_controller) {
     cache_controller->rd_4b_l2 = rd_4b_l2;
     cache_controller->ld_l1_cache = ld_cache_l1;
     cache_controller->ld_l2_cache = ld_cache_l2;
+    return cache_controller;
+}
+
+void free_cache(WOLF_CACHE_CONTROLLER** cache) {
+    if(*cache != NULL) {
+        free(*cache);
+        *cache = NULL;
+    }
 }

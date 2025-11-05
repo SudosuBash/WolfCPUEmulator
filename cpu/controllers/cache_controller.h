@@ -45,4 +45,7 @@ typedef struct {
     LD_CACHE_FN_L1 ld_l1_cache;
     LD_CACHE_FN_L2 ld_l2_cache;
 } WOLF_CACHE_CONTROLLER;
+
+WOLF_CACHE_CONTROLLER* init_cache_controller();
+void free_cache(WOLF_CACHE_CONTROLLER** cache);
 #endif

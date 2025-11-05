@@ -11,15 +11,15 @@ typedef struct {
     };
 } RAM_RD_STATUS;
 
-
-typedef RAM_RD_STATUS (*RD_MEMORY_C_1B)(RAM_INTERFACE_UNIT* unit,uint32_t paddr);
-typedef RAM_RD_STATUS (*RD_MEMORY_C_2B)(RAM_INTERFACE_UNIT* unit,uint32_t paddr);
-typedef RAM_RD_STATUS (*RD_MEMORY_C_4B)(RAM_INTERFACE_UNIT* unit,uint32_t paddr);
-typedef uint8_t (*WR_MEMORY_C_1B)(RAM_INTERFACE_UNIT* unit,uint32_t paddr,uint8_t value);
-typedef uint8_t (*WR_MEMORY_C_2B)(RAM_INTERFACE_UNIT* unit,uint32_t paddr,uint16_t value);
-typedef uint8_t (*WR_MEMORY_C_4B)(RAM_INTERFACE_UNIT* unit,uint32_t paddr,uint32_t value);
+typedef RAM_RD_STATUS (*RD_MEMORY_C_1B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
+typedef RAM_RD_STATUS (*RD_MEMORY_C_2B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
+typedef RAM_RD_STATUS (*RD_MEMORY_C_4B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
+typedef uint8_t (*WR_MEMORY_C_1B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8_t value);
+typedef uint8_t (*WR_MEMORY_C_2B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint16_t value);
+typedef uint8_t (*WR_MEMORY_C_4B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value);
 
 typedef struct {
+    RAM_INTERFACE_UNIT* ram_unit;
     RD_MEMORY_C_1B rd_ram_1b;
     RD_MEMORY_C_2B rd_ram_2b;
     RD_MEMORY_C_4B rd_ram_4b;
@@ -29,4 +29,6 @@ typedef struct {
     WR_MEMORY_C_4B wr_ram_4b;
 } WOLF_MEM_CONTROLLER;
 
+WOLF_MEM_CONTROLLER* init_mem_controller();
+void free_mem(WOLF_MEM_CONTROLLER** controller);
 #endif

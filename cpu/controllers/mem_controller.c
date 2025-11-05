@@ -10,7 +10,7 @@ typedef struct {
     uint32_t y;
 } RAM_BLOCK_POS;
 
-RAM_RD_STATUS rd_memory_1b(RAM_INTERFACE_UNIT* unit,uint32_t paddr) {
+RAM_RD_STATUS rd_memory_1b(WOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
     RAM_RD_STATUS stat = {0};
     uint32_t blockx = paddr & (RAM_BLOCK_RECT_WIDTH - 1);
     uint32_t blocky = (paddr & RAM_BLOCK_RECT_LOW_MASK) >> RAM_BLOCK_MAX_POSITION;
@@ -21,13 +21,13 @@ RAM_RD_STATUS rd_memory_1b(RAM_INTERFACE_UNIT* unit,uint32_t paddr) {
     input.op_y = blocky;
     input.opbytes = 1;
 
-    RAM_OPERATOR_RESULT result = unit->operatorFunc(unit,input);
+    RAM_OPERATOR_RESULT result = controller->ram_unit->operatorFunc(controller->ram_unit,input);
     stat.dmem_error = result.status_flag & 1;
     stat.val8 = result.val1b;
     return stat;
 }
 
-RAM_RD_STATUS rd_memory_2b(RAM_INTERFACE_UNIT* unit,uint32_t paddr) {
+RAM_RD_STATUS rd_memory_2b(WOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
     RAM_RD_STATUS stat = {0};
     uint32_t blockx = paddr & (RAM_BLOCK_RECT_WIDTH - 1);
     uint32_t blocky = (paddr & RAM_BLOCK_RECT_LOW_MASK) >> RAM_BLOCK_MAX_POSITION;
@@ -38,13 +38,13 @@ RAM_RD_STATUS rd_memory_2b(RAM_INTERFACE_UNIT* unit,uint32_t paddr) {
     input.op_y = blocky;
     input.opbytes = 2;
 
-    RAM_OPERATOR_RESULT result = unit->operatorFunc(unit,input);
+    RAM_OPERATOR_RESULT result = controller->ram_unit->operatorFunc(controller->ram_unit,input);
     stat.dmem_error = result.status_flag & 1;
     stat.val8 = result.val1b;
     return stat;
 }
 
-RAM_RD_STATUS rd_memory_4b(RAM_INTERFACE_UNIT* unit,uint32_t paddr) {
+RAM_RD_STATUS rd_memory_4b(WOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
     RAM_RD_STATUS stat = {0};
     uint32_t blockx = paddr & (RAM_BLOCK_RECT_WIDTH - 1);
     uint32_t blocky = (paddr & RAM_BLOCK_RECT_LOW_MASK) >> RAM_BLOCK_MAX_POSITION;
@@ -55,17 +55,24 @@ RAM_RD_STATUS rd_memory_4b(RAM_INTERFACE_UNIT* unit,uint32_t paddr) {
     input.op_y = blocky;
     input.opbytes = 4;
 
-    RAM_OPERATOR_RESULT result = unit->operatorFunc(unit,input);
+    RAM_OPERATOR_RESULT result = controller->ram_unit->operatorFunc(controller->ram_unit,input);
     stat.dmem_error = result.status_flag & 1;
     stat.val8 = result.val1b;
     return stat;
 }
 
-WOLF_MEM_CONTROLLER* init_mem_controller_ram() {
+WOLF_MEM_CONTROLLER* init_mem_controller() {
     WOLF_MEM_CONTROLLER* controller = (WOLF_MEM_CONTROLLER*)malloc(sizeof(WOLF_MEM_CONTROLLER*));
     if(controller == NULL) return NULL;
     controller->rd_ram_1b = rd_memory_1b;
     controller->rd_ram_2b = rd_memory_2b;
     controller->rd_ram_4b = rd_memory_4b;
     return controller;
+}
+
+void free_mem(WOLF_MEM_CONTROLLER** controller) {
+    if(*controller != NULL) {
+        free(*controller);
+        *controller = NULL;
+    }
 }

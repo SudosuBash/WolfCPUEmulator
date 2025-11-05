@@ -24,6 +24,7 @@ typedef struct {
     uint16_t bcr;
     uint16_t scr;
     uint8_t flags;
+    uint32_t pg_mode_base_addr_reg;
 } CPU_Special_Registers;
 
 typedef struct {

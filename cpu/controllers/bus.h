@@ -64,4 +64,7 @@ struct WOLF_CPU_BUS_DEVICE {
     //所有的设备处理都在这个函数里面
     //输入输出在自定义寄存器里面(bar+need_reg_space)，由设备自己定义
 };
+
+WOLF_CPU_BUS_CONTROLLER* init_bus();
+void free_bus(WOLF_CPU_BUS_CONTROLLER** bus);
 #endif

@@ -33,4 +33,8 @@ typedef struct {
 // 128 bytes per line;
 // 2 lines per group
 
+MACHINE_L1_CACHE_GROUP** init_l1_group(uint32_t groups);
+MACHINE_L2_CACHE_GROUP** init_l2_group(uint32_t groups);
+void free_l1_group(MACHINE_L1_CACHE_GROUP*** lcache,uint32_t groups);
+void free_l2_group(MACHINE_L2_CACHE_GROUP*** lcache,uint32_t groups);
 #endif

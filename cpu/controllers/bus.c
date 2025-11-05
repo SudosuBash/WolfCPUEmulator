@@ -44,3 +44,10 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
     //后续实现register_devices 
     return controller;
 }
+
+void free_bus(WOLF_CPU_BUS_CONTROLLER** bus) {
+    if(*bus != NULL) {
+        free(*bus);
+        *bus = NULL;
+    }
+}

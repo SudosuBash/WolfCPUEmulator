@@ -1,15 +1,17 @@
 #ifndef __WOLF_ALU
 #define __WOLF_ALU
-typedef struct {
-    
-} WOLF_ADD_ALU_UNIT;
+
+#include <stdint.h>
+
+typedef uint32_t (*ALU_OPERATE_FN)(WOLF_ALU* alu,uint32_t idata1,uint32_t idata2);
 
 typedef struct {
-
-} WOLF_MUL_ALU_UNIT;
-
-typedef struct {
-
-} WOLF_DIV_ALU_UNIT;
+    ALU_OPERATE_FN add_operate;
+    ALU_OPERATE_FN sub_operate;
+    ALU_OPERATE_FN mul_operate;
+    ALU_OPERATE_FN div_operate;
+    ALU_OPERATE_FN ml_operate;
+    ALU_OPERATE_FN mr_operate;
+} WOLF_ALU;
 
 #endif
