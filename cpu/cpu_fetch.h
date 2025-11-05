@@ -18,10 +18,15 @@
 #define ICODE_LIER 0b110100
 #define ICODE_RET 0b100100
 
+#define ICODE_RET_EXFUNC 0x01
+#define ICODE_IRET_EXFUNC 0x10
+#define ICODE_ERET_EXFUNC 0x11
+
 #define CMD_ITYPE 0
 #define CMD_RTYPE 1
 
 typedef struct {
+    uint8_t irtype:1;
     uint8_t icode:6;
     uint8_t reg1:5;
     uint8_t reg2:5;
@@ -29,7 +34,8 @@ typedef struct {
     uint8_t aluExFunc:3;
     uint8_t jmpExCond:3;
     uint8_t ExFlag:5;
+    uint8_t noexception:1;//指令应该继续执行吗?
 } WCPUFetchData;
 
-WCPUFetchData decodeData(uint32_t fetch);
+WCPUFetchData decodeData(WOLF_CPU* cpu,uint32_t fetch);
 #endif

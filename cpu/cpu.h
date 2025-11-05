@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include "alu.h"
 #include "cpu_fetch.h"
+#include "cpu_decode.h"
 
 #define IS_IN_KERN_MODE(cpu) \
         (cpu->spe_regs.bcr & KERN_MODE_MASK)
@@ -35,11 +36,12 @@ typedef struct {
     
 
     WCPUFetchData if_data_reg;
-
+    WCPUDecodedData id_data_reg;
+    WCPUExecuteResult ex_data_reg;
+    
     pthread_mutex_t clock_execution; //CPU 时序锁
     //真实电路都是按照时序来的，不需要这玩意，这个只是模拟时序
 } WOLF_CPU;
-
 
 // typedef void (*ecall)(WOLF_CPU* cpu,uint8_t ecode);
 

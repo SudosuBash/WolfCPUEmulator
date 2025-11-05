@@ -48,12 +48,16 @@ static void eret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     cpu->spe_regs.bcr &= cpu->ecall_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
     cpu->pc = cpu->ecall_regs.mpc + 4; //跳过当前指令
+    cpu->ecall_regs.mep = 0;
+    cpu->ecall_regs.mreason = 0;
 } 
 static void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     cpu->spe_regs.bcr &= (0b11111111 ^ IRQ_DISALLOW_MASK);
     cpu->spe_regs.bcr &= cpu->irq_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
     cpu->pc = cpu->irq_regs.mpc;
+    cpu->ecall_regs.mep = 0;
+    cpu->ecall_regs.mreason = 0;
 } 
 
 WOLF_CPU_ECALL_CONTROLLER* init_ecall() {

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <cpu/cpu.h>
 #include <pthread.h>
+#include <cpu/controllers/ecall.h>
 
 #define GET_64_CLEAR_FLAG(num) (0xffffffffffffffff ^ (1 << (num)))
 #define GET_64_SET_FLAG(num) (1 << (num))
@@ -154,7 +155,7 @@ void device_start(WOLF_CPU_BUS_DEVICE* device) {
             break;
     }
     if(controller->int_valid_flag) {
-        irq_call(cpu->ecall_controller,REASON_FOR_EXTERNAL_IRQ);
+        irq_call(cpu->ecall_controller,IREASON_FOR_EXTERNAL_IRQ);
     }
     controller->regs[IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR] = 0;
     pthread_mutex_unlock(&(controller->device_rwlock));

@@ -1,4 +1,6 @@
 #include "cpu_fetch.h"
+#include <cpu/controllers/ecall.h>
+#include "cpu.h"
 
 static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
     uint8_t icodeA = 
@@ -65,12 +67,13 @@ static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
 
     return Through8(type^1, val1 | val2);
 }
-WCPUFetchData decodeData(uint32_t fetch) {
+WCPUFetchData decodeData(WOLF_CPU* cpu,uint32_t fetch) {
     WCPUFetchData result;
     uint8_t type = fetch >> 31;
     uint8_t icode = (fetch >> 25) & 0b0111111;
     uint32_t data = fetch & 0x01ffffff;
 
+    result.irtype = fetch & 0x7fffffff;
     result.icode = icode;
     result.reg1 = getLRegisterA(icode, data);
     result.reg2 = getLRegisterB(type,icode,data);
@@ -78,5 +81,25 @@ WCPUFetchData decodeData(uint32_t fetch) {
     result.aluExFunc = getExFunc(type,icode,data);
     result.jmpExCond = getExCond(type,icode,data);
     result.ExFlag = getExFlag(type,icode,data);
+    
+    uint8_t invalid = (icode != ICODE_ALU 
+        && icode != ICODE_ECALL 
+        && icode != ICODE_ERET_EXFUNC 
+        && icode != ICODE_IRET_EXFUNC
+        && icode != ICODE_JMP_I
+        && icode != ICODE_JMP_II 
+        && icode != ICODE_LIER
+        && icode != ICODE_LPGR
+        && icode != ICODE_LSCR
+        && icode != ICODE_MLMR
+        && icode != ICODE_MOV
+        && icode != ICODE_OCALL
+        && icode != ICODE_RET
+        && icode != ICODE_RSCR); //电路中直接6-64然后对那些未使用的引脚做or就好
+    result.noexception = 1;
+    if(Through8(result.irtype ^ 1,invalid)) {
+        ecall(cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE); //调用 ecall 函数，代表出现问题
+        result.noexception = 0;
+    }
     return result;
 } 

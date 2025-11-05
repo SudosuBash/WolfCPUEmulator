@@ -3,15 +3,17 @@
 
 #include <stdint.h>
 
-typedef uint32_t (*ALU_OPERATE_FN)(WOLF_ALU* alu,uint32_t idata1,uint32_t idata2);
-
-typedef struct {
+typedef struct WOLF_ALU WOLF_ALU;
+typedef uint32_t (*ALU_OPERATE_FN)(WOLF_ALU* alu,uint32_t idata1,uint32_t idata2,uint8_t sgn);
+typedef uint32_t (*ALU_OPERATE_FN_NO_SGN)(WOLF_ALU* alu,uint32_t idata1,uint32_t idata2);
+struct WOLF_ALU {
     ALU_OPERATE_FN add_operate;
-    ALU_OPERATE_FN sub_operate;
     ALU_OPERATE_FN mul_operate;
-    ALU_OPERATE_FN div_operate;
-    ALU_OPERATE_FN ml_operate;
-    ALU_OPERATE_FN mr_operate;
-} WOLF_ALU;
-
+    ALU_OPERATE_FN_NO_SGN ml_operate;
+    ALU_OPERATE_FN_NO_SGN mr_operate;
+    ALU_OPERATE_FN_NO_SGN and_operate;
+    ALU_OPERATE_FN_NO_SGN or_operate;
+    ALU_OPERATE_FN_NO_SGN xor_operate;
+    ALU_OPERATE_FN_NO_SGN neg_operate;
+};
 #endif
