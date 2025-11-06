@@ -4,7 +4,8 @@ WCPUExecuteResult execute(WOLF_CPU* cpu) {
     WCPUDecodedData data = cpu->id_data_reg;
     uint8_t icode = data.icode;
     WCPUExecuteResult res = {0};
-    if(!data.noexception) goto CPU_EXEC_END_STATUS;
+    if(!data.noexception) 
+        goto CPU_EXEC_END_STATUS;
     res.noexception = data.noexception;
     switch (icode) {
         case ICODE_ALU: {

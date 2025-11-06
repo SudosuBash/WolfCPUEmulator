@@ -12,6 +12,7 @@
 #include "alu.h"
 #include "cpu_fetch.h"
 #include "cpu_decode.h"
+#include "cpu_execute.h"
 
 #define IS_IN_KERN_MODE(cpu) \
         (cpu->spe_regs.bcr & KERN_MODE_MASK)
@@ -30,6 +31,7 @@ typedef struct {
     WOLF_MEM_CONTROLLER* mem_controller;
     WOLF_CACHE_CONTROLLER* cache_controller;
     WOLF_CPU_BUS_CONTROLLER* bus;
+    WOLF_CPU_MMU_CONTROLLER* mmu;
 
     MACHINE_L1_CACHE_GROUP** cache1;
     MACHINE_L2_CACHE_GROUP** cache2;
