@@ -8,13 +8,13 @@
  *  真实内存就是一块一块的
  */
 
+ /**
+ * 本 RAM 一次能读取的值为4 字节/128 字节
+ * 仅仅跟 L2 缓存打配合
+ */
 typedef struct {
     uint8_t status_flag:5;
-    union {
-        uint8_t val1b;
-        uint16_t val2b;
-        uint32_t val4b;
-    };
+    uint32_t data[L2_GROUP_SIZE / sizeof(uint32_t)];
 } RAM_OPERATOR_RESULT;
 
 typedef struct {
@@ -22,11 +22,7 @@ typedef struct {
     uint8_t opbytes:3; 
     uint32_t op_x:RAM_BLOCK_MAX_POSITION;
     uint32_t op_y:RAM_BLOCK_MAX_POSITION;
-    union {
-        uint8_t val1bIn;
-        uint16_t val2bIn;
-        uint32_t val4bIn;
-    };
+    uint32_t val4bIn;
 } RAM_IN_ARGS;
 
 typedef uint8_t (*RAM_BLOCK)[RAM_BLOCK_RECT_WIDTH][RAM_BLOCK_RECT_WIDTH];

@@ -1,15 +1,21 @@
 #include "cpu.h"
 #include <stdint.h>
 #include <stdlib.h>
-
+#include <cpu/cpu_mem.h>
 uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
-    
+    while (1) {
+        fetchData(cpu);
+        decode(cpu);
+        execute(cpu);
+        memory(cpu);
+        clk += 1;
+    }
 }
 
 void init_env() {
     WOLF_CPU* cpu = init_cpu();
-    
+    start_cpu(cpu);
 }
 
 WOLF_CPU* init_cpu() {
@@ -50,7 +56,6 @@ FREE_CPU: return NULL;
 }
 
 void free_cpu(WOLF_CPU** cpu) {
-
     WOLF_CPU* ocpu = *cpu;
     if(ocpu != NULL) {
         free_cache(ocpu->cache_controller);

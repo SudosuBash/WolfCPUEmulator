@@ -15,7 +15,8 @@ WCPUDecodedData decode(WOLF_CPU* cpu) {
     res.icode = data.icode;
     res.ExFunc = data.aluExFunc;
     res.valA = val1;
-    res.valB = Through32(data.irtype,val2) | Through32(data.irtype ^ 1,data.idata);
+    res.valB = val2;
+    res.valC = data.idata;
     res.ExFlag = data.ExFlag;
     res.noexception = data.noexception; //上传
     if(val1 >= MAX_GEN_REGISTER_COUNT || val2 >= MAX_GEN_REGISTER_COUNT) {

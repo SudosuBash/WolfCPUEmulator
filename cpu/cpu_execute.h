@@ -26,8 +26,9 @@
 
 
 typedef struct {
-    uint32_t op_result;
-    uint32_t op_result2; //用于乘除法
+    uint32_t valC;
+    uint32_t valC_Extended;//用于乘除法
+    uint32_t valB;
     uint8_t icode;
     uint8_t destReg;
     uint8_t ExCond:3;

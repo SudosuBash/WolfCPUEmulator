@@ -29,6 +29,8 @@
 #define get_parent_struct(object,type,member) \
    (type*)((char*)(object) - (size_t)(&(((type*)0)->member)))
 #define KERN_MODE_MASK 0x01
+#define CACHE_OPEN_MASK 0x02
+#define BCR_PGO_MASK 0x04
 
 #define STAT_SUCCESS 0
 #define STAT_UNKNOWN_ERROR 0xff

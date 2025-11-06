@@ -67,8 +67,11 @@ static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
 
     return Through8(type^1, val1 | val2);
 }
-WCPUFetchData decodeData(WOLF_CPU* cpu,uint32_t fetch) {
+WCPUFetchData fetchData(WOLF_CPU* cpu) {
     WCPUFetchData result;
+    
+    WOLF_CPU_MMU_CONTROLLER* ctrler = cpu->mmu;
+    uint32_t fetch = ctrler->rd_mmu(ctrler,cpu->pc);
     uint8_t type = fetch >> 31;
     uint8_t icode = (fetch >> 25) & 0b0111111;
     uint32_t data = fetch & 0x01ffffff;

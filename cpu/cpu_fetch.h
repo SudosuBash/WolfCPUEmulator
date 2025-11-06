@@ -32,10 +32,10 @@ typedef struct {
     uint8_t reg2:5;
     uint16_t idata;
     uint8_t aluExFunc:3;
-    uint8_t jmpExCond:3;
+    uint8_t jmpExCond:4;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?
 } WCPUFetchData;
 
-WCPUFetchData decodeData(WOLF_CPU* cpu,uint32_t fetch);
+WCPUFetchData fetchData(WOLF_CPU* cpu);
 #endif

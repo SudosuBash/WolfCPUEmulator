@@ -11,10 +11,12 @@
 #define BUS_STATUS_ERROR 0x2
 #define BUS_STATUS_SUCCESS 0x1
 #define BUS_STATUS_PENDING 0x0
+#define BUS_STATUS_TIMEOUT 0x3
 
 #define BUS_RW_READ 0x0
 #define BUS_RW_WRITE 0x1
 
+#define BUS_WAIT_DELTA 3000
 typedef struct {
     uint32_t data;
     uint8_t be:4;

@@ -3,11 +3,9 @@
 
 #include <stdint.h>
 
-#define BCR_PGO_MASK 0b10
+
 
 typedef struct WOLF_CPU_MMU WOLF_CPU_MMU_CONTROLLER,*PWOLF_CPU_MMU;
-typedef uint32_t (*PA_MANAGER)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t vaddr, uint8_t flags); 
-
 // typedef struct {
 //     uint32_t vaddr;
 //     uint32_t paddr;
@@ -15,7 +13,7 @@ typedef uint32_t (*PA_MANAGER)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t vaddr, uint
 //思考再三，我决定去掉TLB的设计
 //TLB本意是当页表缓存，加速查表速度。但是问题是这个TLB反倒因为"C语言串行"的因素拖慢模拟器速度
 
-typedef void (*mmu_memory_wr)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr);
+typedef void (*mmu_memory_wr)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr, MMU_DATA data);
 typedef MMU_DATA (*mmu_memory_rd)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr);
 
 typedef struct {

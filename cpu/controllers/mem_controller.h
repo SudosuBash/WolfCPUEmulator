@@ -5,28 +5,19 @@
 typedef struct {
     uint8_t dmem_error:1;
     union {
-        uint8_t val8;
-        uint16_t val16;
-        uint32_t val32;
-    };
+        uint32_t offset[L2_SIZE / sizeof(uint32_t)];
+        uint32_t offset4;
+    } data;
 } RAM_RD_STATUS;
 
-typedef RAM_RD_STATUS (*RD_MEMORY_C_1B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
-typedef RAM_RD_STATUS (*RD_MEMORY_C_2B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
-typedef RAM_RD_STATUS (*RD_MEMORY_C_4B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
-typedef uint8_t (*WR_MEMORY_C_1B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8_t value);
-typedef uint8_t (*WR_MEMORY_C_2B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint16_t value);
-typedef uint8_t (*WR_MEMORY_C_4B)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value);
+typedef RAM_RD_STATUS (*RD_MEMORY_C)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr);
+typedef uint8_t (*WR_MEMORY_C)(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value);
 
 typedef struct {
     RAM_INTERFACE_UNIT* ram_unit;
-    RD_MEMORY_C_1B rd_ram_1b;
-    RD_MEMORY_C_2B rd_ram_2b;
-    RD_MEMORY_C_4B rd_ram_4b;
-    
-    WR_MEMORY_C_1B wr_ram_1b;
-    WR_MEMORY_C_2B wr_ram_2b;
-    WR_MEMORY_C_4B wr_ram_4b;
+    RD_MEMORY_C rd_ram;
+    RD_MEMORY_C rd_ram_4b;
+    WR_MEMORY_C wr_ram;
 } WOLF_MEM_CONTROLLER;
 
 WOLF_MEM_CONTROLLER* init_mem_controller();

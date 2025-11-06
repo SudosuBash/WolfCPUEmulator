@@ -8,7 +8,8 @@ typedef struct {
     uint8_t destRegs;
     uint32_t valA;
     uint32_t valB;
-    uint8_t ExCond:3;
+    uint32_t valC;
+    uint8_t ExCond:4;
     uint8_t ExFunc:5;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?

@@ -6,7 +6,7 @@
 typedef struct {
     uint8_t valid:4;
     uint32_t tag:L1_TAG;
-    uint64_t offset[L1_SIZE / sizeof(uint64_t)];
+    uint32_t offset[L1_SIZE / sizeof(uint32_t)];
 } MACHINE_L1_CACHE_LINE;
 
 typedef struct {
@@ -21,7 +21,7 @@ typedef struct {
 typedef struct {
     uint8_t valid:4;
     uint32_t tag:L2_TAG;
-    uint64_t offset[L2_SIZE / sizeof(uint64_t)];
+    uint32_t offset[L2_SIZE / sizeof(uint32_t)];
 } MACHINE_L2_CACHE_LINE;
 
 typedef struct {

@@ -15,9 +15,14 @@
 #include "cpu_execute.h"
 
 #define IS_IN_KERN_MODE(cpu) \
-        (cpu->spe_regs.bcr & KERN_MODE_MASK)
+        ((cpu)->spe_regs.bcr & KERN_MODE_MASK)
 
+#define IS_CACHE_ON(cpu) \
+    ((cpu)->spe_regs.bcr & CACHE_OPEN_MASK) >> 1
+#define IS_PGO_ON(cpu) \
+    ((cpu)->spe_regs.bcr & BCR_PGO_MASK) >> 2
 
+#define BASE_MMIO_ADDR 0xff000000
 typedef struct {
     uint32_t pc;
     
@@ -40,6 +45,7 @@ typedef struct {
     WCPUFetchData if_data_reg;
     WCPUDecodedData id_data_reg;
     WCPUExecuteResult ex_data_reg;
+    WCPUMemResult mem_data_reg;
     
     pthread_mutex_t clock_execution; //CPU 时序锁
     //真实电路都是按照时序来的，不需要这玩意，这个只是模拟时序

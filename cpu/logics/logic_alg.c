@@ -31,6 +31,14 @@ uint64_t Mux64(uint8_t cnd, uint64_t origin,uint64_t newValue) {
     return (cnd64mask & newValue) | (fcnd64mask & origin);
 }
 
+uint32_t Mux32(uint8_t cnd, uint32_t origin,uint32_t newValue) {
+    uint32_t cnd32 = (uint64_t)(cnd); // 0
+    uint32_t cnd32mask = -cnd32;
+    uint32_t fcnd32 = cnd32 ^ 1;
+    uint32_t fcnd32mask = -fcnd32;
+    return (cnd32mask & newValue) | (fcnd32mask & origin);
+}
+
 uint8_t Mux8(uint8_t cnd, uint8_t origin,uint8_t newValue) {
     uint8_t cnd8 = (uint64_t)(cnd); // 0
     uint8_t cnd8mask = -cnd8;
