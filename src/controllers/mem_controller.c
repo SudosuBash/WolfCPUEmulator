@@ -66,7 +66,7 @@ RAM_WR_STATUS wr_mem(WOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t val
 }
 
 WOLF_MEM_CONTROLLER* init_mem_controller() {
-    WOLF_MEM_CONTROLLER* controller = (WOLF_MEM_CONTROLLER*)malloc(sizeof(WOLF_MEM_CONTROLLER*));
+    WOLF_MEM_CONTROLLER* controller = (WOLF_MEM_CONTROLLER*)malloc(sizeof(WOLF_MEM_CONTROLLER));
     if(controller == NULL) return NULL;
     controller->rd_ram = rd_memory;
     controller->rd_ram_4b = rd_memory_4b;
