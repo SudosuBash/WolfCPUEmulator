@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <memory.h>
 uint32_t get_data(uint32_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM],uint32_t addr) {
-    uint32_t pde = addr >> 20;
-    uint32_t pte = (addr >> 12) & 0xff;
-    uint32_t offset = (addr & 0xfff);
+    uint32_t pde = addr >> RAM_PDE_POS;
+    uint32_t pte = (addr >> RAM_PTE_POS) & RAM_PTE_MASK;
+    uint32_t offset = (addr & RAM_OFFSET_MASK);
     if(ram_page_table[pde][pte] == NULL) {
         uint32_t* ram = (uint32_t*)malloc(RAM_SINGLE_BLK_SIZE * sizeof(uint8_t));
         memset(ram,0,RAM_SINGLE_BLK_SIZE * sizeof(uint8_t));
@@ -15,9 +15,9 @@ uint32_t get_data(uint32_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM],uint32_t 
 }
 
 void write_data(uint32_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM],uint32_t addr,uint32_t data) {
-    uint32_t pde = addr >> 22;
-    uint32_t pte = (addr >> 14) & 0xff;
-    uint32_t offset = (addr & 0x3fff);
+    uint32_t pde = addr >> RAM_PDE_POS;
+    uint32_t pte = (addr >> RAM_PTE_POS) & RAM_PTE_MASK;
+    uint32_t offset = (addr & RAM_OFFSET_MASK);
     if(ram_page_table[pde][pte] == NULL) {
         uint32_t* ram = (uint32_t*)malloc(RAM_SINGLE_BLK_SIZE * sizeof(uint8_t));
         memset(ram,0,RAM_SINGLE_BLK_SIZE * sizeof(uint8_t));
