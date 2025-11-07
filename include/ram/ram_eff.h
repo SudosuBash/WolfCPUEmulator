@@ -4,9 +4,9 @@
 #include <global.h>
 
 #define RAM_SIZE 4294967296
-#define RAM_PDE_ITEM 4096
+#define RAM_PDE_ITEM 1024
 #define RAM_PTE_ITEM 256
-#define RAM_SINGLE_BLK_SIZE 4096
+#define RAM_SINGLE_BLK_SIZE 32768
 
 #define RAM_IN_OPCODE_RD 0
 #define RAM_IN_OPCODE_WR 1
@@ -32,7 +32,7 @@ typedef RAM_OPERATOR_RESULT (*ram_operator_func)(RAM_INTERFACE_UNIT* unit,RAM_IN
 
 struct RAM_INTERFACE_UNIT {
     uint32_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM];
-    //就占4MB,挺小的
+    //就占2MB,挺小的
     //需要的时候再分配
     ram_operator_func operatorFunc;
 };
