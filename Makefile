@@ -1,5 +1,18 @@
-FLAGS = main.c -o main.out
+CC = gcc
+CFLAGS = -Iinclude
+LDFLAGS = 
+SRCS = main.c $(wildcard src/*.c) $(wildcard src/**/*.c)
+OBJS = $(SRCS:.c=.o)
+TARGET = app.exe
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) $(LDFLAGS) -o $(TARGET)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
 clean:
-	rm -rf *.out
-all:
-	gcc main.c -Wall -g -I./cpu -o main
+	del $(TARGET) $(OBJS) src\**\*.o 2>NUL

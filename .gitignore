@@ -3,3 +3,7 @@
 *.dSYM
 *.out
 *.exe
+*.o
+*/*.o
+*/**/*.o
+build
