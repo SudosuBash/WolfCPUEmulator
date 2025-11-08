@@ -9,7 +9,6 @@
 #define KEYBOARD_DEVICE_STAT_REG 0x1
 #define KEYBOARD_DEVICE_WRITE_BUF 0x2
 #define KEYBOARD_DEVICE_REGS 7
-#define BUS_KEYBOARD_DEVICE_BASE_ADDR 0xF0000100
 #define KEYBOARD_IRQ_NUMS 0x1
 
 static const char device_name[] = "Wolf Virtual Keyboard for macOS";

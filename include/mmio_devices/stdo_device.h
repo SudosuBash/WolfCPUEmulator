@@ -12,7 +12,6 @@
 #define STDO_STAT_BUSY 0xff
 #define STDO_STAT_ERROR_UNKNOWN 0xfe
 #define STDO_STAT_ERROR_UNKNOWN_CMD 0x01
-#define BUS_STDO_DEVICE_BASE_ADDR 0xF0000000
 
 #include <stdint.h>
 #include <controllers/bus.h>

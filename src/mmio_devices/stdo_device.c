@@ -90,7 +90,6 @@ WOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
     strncpy(bus_device->vendor, vendor_name,DEVICE_VENDOR_STR_MAX);
     bus_device->bus_controller = controller;
     bus_device->vendor_id = device_id;
-    bus_device->base_address = BUS_STDO_DEVICE_BASE_ADDR;
     stdo_device->bus_device = bus_device;
     bus_device->need_space = need_space;
     bus_device->start_func = device_start;
