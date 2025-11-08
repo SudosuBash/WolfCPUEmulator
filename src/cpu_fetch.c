@@ -103,11 +103,11 @@ static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
 }
 WCPUFetchData fetchData(WOLF_CPU* cpu) {
     WCPUFetchData result;
-    WOLF_CPU_ECALL_CONTROLLER* ecall_ctrler = cpu->ecall_controller;
-    WOLF_CPU_MMU_CONTROLLER* ctrler = cpu->mmu;
-    MMU_STATUS mmu_res = ctrler->rd_mmu(ctrler,cpu->pc);
+    PWOLF_CPU_ECALL_CONTROLLER* ecall_ctrler = &cpu->ecall_controller;
+    PWOLF_CPU_MMU_CONTROLLER* ctrler = &(cpu->mmu);
+    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc);
     if(mmu_res.stat != 0) {
-        ecall(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat));
+        cpu->ecall_controller->ecaller(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat));
         result.noexception = 0;
         goto WCPU_FETCH_DATA_END;
     }
@@ -142,7 +142,7 @@ WCPUFetchData fetchData(WOLF_CPU* cpu) {
         && icode != ICODE_RSCR); //电路中直接6-64然后对那些未使用的引脚做or就好
     result.noexception = 1;
     if(Through8(result.irtype ^ 1,invalid)) {
-        ecall(cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE); //调用 ecall 函数，代表出现问题
+        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE); //调用 ecall 函数，代表出现问题
         result.noexception = 0;
     }
 WCPU_FETCH_DATA_END:

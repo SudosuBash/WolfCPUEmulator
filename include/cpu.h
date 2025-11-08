@@ -22,6 +22,8 @@
     ((cpu)->spe_regs.bcr & BCR_PGO_MASK) >> 2
 
 #define BASE_MMIO_ADDR 0xff000000
+#define BASE_BIOS_ADDR 0xfffffe00
+//BIOS 512 MiB
 
 #define CPU_REG_SPE_BCR 0b10000
 #define CPU_REG_SPE_SCR 0b10001

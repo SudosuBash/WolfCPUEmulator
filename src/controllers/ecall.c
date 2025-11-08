@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 //同步时序
-void ecall(WOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
+void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
 
     uint32_t base_addr = cpu->ecall_regs.mpc + ecode * ECALL_SINGLE_ITEM_LENGTH;
@@ -20,7 +20,7 @@ void ecall(WOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
 
 
 //异步时序
-void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
+void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     if(cpu->spe_regs.bcr & IRQ_DISALLOW_MASK) return;
     pthread_mutex_lock(&cpu->clock_execution); //加锁保证时序统一
@@ -29,8 +29,8 @@ void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
         .be = 0b0001,
         .data = IRQ_CMD_PROCESS_OK
     };
-    cpu->bus->send_data(cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
-    BUS_SEND_DATA recv_val = cpu->bus->recv_data(cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
+    cpu->bus->send_data(&cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
+    BUS_SEND_DATA recv_val = cpu->bus->recv_data(&cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
     uint8_t irqcode = recv_val.data & 0xff; 
     
     uint32_t base_addr = cpu->irq_regs.mpc + irqcode * ECALL_SINGLE_ITEM_LENGTH;
@@ -44,14 +44,14 @@ void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
     pthread_mutex_unlock(&cpu->clock_execution);
 }
 
-void eret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
+void eret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     cpu->spe_regs.bcr &= cpu->ecall_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
     cpu->pc = cpu->ecall_regs.mpc + 4; //跳过当前指令
     cpu->ecall_regs.mep = 0;
     cpu->ecall_regs.mreason = 0;
 } 
-void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
+void iret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     cpu->spe_regs.bcr &= (0b11111111 ^ IRQ_DISALLOW_MASK);
     cpu->spe_regs.bcr &= cpu->irq_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
@@ -61,7 +61,7 @@ void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl) {
 } 
 
 WOLF_CPU_ECALL_CONTROLLER* init_ecall() {
-    WOLF_CPU_ECALL_CONTROLLER* ctrl = (WOLF_CPU_ECALL_CONTROLLER*)malloc(sizeof(WOLF_CPU_ECALL_CONTROLLER));
+    WOLF_CPU_ECALL_CONTROLLER* ctrl = (WOLF_CPU_ECALL_CONTROLLER*)calloc(1,sizeof(WOLF_CPU_ECALL_CONTROLLER));
     ctrl->ecaller = ecall;
     ctrl->irq_caller = irq_call;
     ctrl->eret_caller = eret;

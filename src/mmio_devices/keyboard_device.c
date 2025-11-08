@@ -2,7 +2,7 @@
 #include <global.h>
 static WOLF_MMIO_KEYBOARD_DEVICE* kb_device;
 
-static void device_start(WOLF_CPU_BUS_DEVICE* device) {
-    WOLF_MMIO_KEYBOARD_DEVICE* kb=(WOLF_MMIO_KEYBOARD_DEVICE*)get_parent_struct(device,WOLF_MMIO_KEYBOARD_DEVICE,bus_device);
+static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
+    WOLF_MMIO_KEYBOARD_DEVICE* kb=get_parent_struct(pdevice,WOLF_MMIO_KEYBOARD_DEVICE,bus_device);
     
 }

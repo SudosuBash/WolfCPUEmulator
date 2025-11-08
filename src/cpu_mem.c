@@ -21,9 +21,9 @@ WCPUMemResult memory(WOLF_CPU* cpu) {
     switch(res.icode) {
         case ICODE_RET: {
             if(res.ExFunc != 0) break; //确保普通的ret
-            MMU_STATUS stat = controller->rd_mmu(controller,res.valA);
+            MMU_STATUS stat = controller->rd_mmu(&controller,res.valA);
             if(stat.stat != 0) {
-                ecall(cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat));
+                cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat));
                 res.noexception = 0;
                 goto CPU_MEM_END_STATUS;
             }
@@ -34,7 +34,7 @@ WCPUMemResult memory(WOLF_CPU* cpu) {
         case ICODE_OCALL: {
             MMU_DATA data = {0};
             data.be = 0b1111;
-            controller->wr_mmu(controller,res.valC,data);
+            controller->wr_mmu(&controller,res.valC,data);
             break;            
         }
     }

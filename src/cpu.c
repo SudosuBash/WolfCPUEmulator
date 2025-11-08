@@ -22,7 +22,7 @@ void init_env() {
 }
 
 WOLF_CPU* init_cpu() {
-    WOLF_CPU* cpu = (WOLF_CPU*) malloc(sizeof(WOLF_CPU));
+    WOLF_CPU* cpu = (WOLF_CPU*) calloc(1,sizeof(WOLF_CPU));
     if(cpu == NULL) goto FREE_CPU;
     WOLF_CPU_BUS_CONTROLLER* bus = init_bus();
     if(bus == NULL) goto FREE_BUS;
@@ -34,7 +34,8 @@ WOLF_CPU* init_cpu() {
 
     WOLF_MEM_CONTROLLER* mem = init_mem_controller();
     if(mem == NULL) goto FREE_MEM;
-
+    WOLF_CPU_MMU_CONTROLLER* mmu = init_mmu_controller();
+    if(mmu == NULL) goto FREE_MMU;
     MACHINE_L1_CACHE_GROUP** l1_group = init_l1_group(CACHE_L1_GROUPS);
     if(l1_group == NULL) goto FREE_L1_GROUP;
     MACHINE_L2_CACHE_GROUP** l2_group = init_l2_group(CACHE_L2_GROUPS);
@@ -44,13 +45,16 @@ WOLF_CPU* init_cpu() {
     cpu->bus = bus;
     cpu->ecall_controller = ecall;
     cpu->mem_controller = mem;
+    cpu->mmu = mmu;
     cpu->cache1 = l1_group;
     cpu->cache2 = l2_group;
-
+    cpu->clock_execution = PTHREAD_MUTEX_INITIALIZER;
+    cpu->pc = BASE_BIOS_ADDR; //刚开始初始化pc为BASE_BIOS_ADDR，转去执行BIOS的程序
     return cpu;
 
 FREE_L2_GROUP: free_l1_group(&l1_group,CACHE_L1_GROUPS);
-FREE_L1_GROUP: free_mem(&mem);
+FREE_L1_GROUP: free_mmu_controller(&mmu);
+FREE_MMU: free_mem(&mem);
 FREE_MEM: free_cache(&cache);
 FREE_CACHE: free_ecall(&ecall);
 FREE_ECALL: free_bus(&bus);

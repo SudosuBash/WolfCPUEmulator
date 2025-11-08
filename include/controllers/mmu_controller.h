@@ -16,7 +16,7 @@
 #define VADDR_OFFSET_BYTE_MASK (1 << VADDR_OFFSET_PTE) - 1
 #define VADDR_OFFSET_PTE_MASK (1 << VADDR_OFFSET_PDE) - 1
 
-typedef struct WOLF_CPU_MMU WOLF_CPU_MMU_CONTROLLER,*PWOLF_CPU_MMU;
+typedef struct WOLF_CPU_MMU WOLF_CPU_MMU_CONTROLLER,*PWOLF_CPU_MMU_CONTROLLER;
 // typedef struct {
 //     uint32_t vaddr;
 //     uint32_t paddr;
@@ -34,8 +34,8 @@ typedef struct {
     uint32_t data;
 } MMU_STATUS;
 
-typedef MMU_STATUS (*mmu_memory_rd)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr);
-typedef MMU_STATUS (*mmu_memory_wr)(WOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr,MMU_DATA data);
+typedef MMU_STATUS (*mmu_memory_rd)(PWOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr);
+typedef MMU_STATUS (*mmu_memory_wr)(PWOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr,MMU_DATA data);
 
 struct WOLF_CPU_MMU{
     mmu_memory_wr wr_mmu;
@@ -43,5 +43,5 @@ struct WOLF_CPU_MMU{
 };
 
 WOLF_CPU_MMU_CONTROLLER* init_mmu_controller();
-void free_mmu_controller(WOLF_CPU_MMU_CONTROLLER** controller);
+void free_mmu_controller(PWOLF_CPU_MMU_CONTROLLER* controller);
 #endif

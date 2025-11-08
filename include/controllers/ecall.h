@@ -16,12 +16,12 @@
 #define EREASON_FOR_BCR_RAM_ERR_ACCESS_DENIED 0x7
 
 #include <stdint.h>
-typedef struct WOLF_CPU_ECALL_CONTROLLER WOLF_CPU_ECALL_CONTROLLER;
+typedef struct WOLF_CPU_ECALL_CONTROLLER WOLF_CPU_ECALL_CONTROLLER,*PWOLF_CPU_ECALL_CONTROLLER;
 
-typedef void (*ecaller)(WOLF_CPU_ECALL_CONTROLLER* ctrl,uint8_t ecode, uint8_t reason);
-typedef void (*irq_caller)(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason);
-typedef void (*eret_caller)(WOLF_CPU_ECALL_CONTROLLER* ctrl);
-typedef void (*iret_caller)(WOLF_CPU_ECALL_CONTROLLER* ctrl);
+typedef void (*ecaller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl,uint8_t ecode, uint8_t reason);
+typedef void (*irq_caller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason);
+typedef void (*eret_caller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl);
+typedef void (*iret_caller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl);
 
 struct WOLF_CPU_ECALL_CONTROLLER { 
     
@@ -30,10 +30,6 @@ struct WOLF_CPU_ECALL_CONTROLLER {
     eret_caller eret_caller;
     iret_caller iret_caller;
 };
-void ecall(WOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason);
-void irq_call(WOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason);
-void eret(WOLF_CPU_ECALL_CONTROLLER* ctrl);
-void iret(WOLF_CPU_ECALL_CONTROLLER* ctrl);
 
 WOLF_CPU_ECALL_CONTROLLER* init_ecall();
 void free_ecall(WOLF_CPU_ECALL_CONTROLLER** ecall);

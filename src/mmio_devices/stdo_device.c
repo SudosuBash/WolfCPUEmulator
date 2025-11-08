@@ -10,8 +10,9 @@
 #include <controllers/bus.h>
 
 static WOLF_MMIO_STDO_DEVICE* stdo_device;
-static void write_reg(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA data) {
-    WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(device,WOLF_MMIO_STDO_DEVICE, bus_device);
+static void write_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,BUS_SEND_DATA data) {
+    WOLF_CPU_BUS_DEVICE* device = *pdevice;
+    WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE, bus_device);
     pthread_rwlock_wrlock(&(dev->device_rwlock));
     uint8_t stat = write_reg_general(device->bus_controller,addr,device->base_address,STDO_DEVICE_REGS,dev->regs);
     if(stat == 0) {
@@ -23,9 +24,9 @@ static void write_reg(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA dat
     pthread_rwlock_unlock(&(dev->device_rwlock));
 }
 
-static void read_reg(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,uint8_t be) {
-
-    WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(device,WOLF_MMIO_STDO_DEVICE,bus_device);
+static void read_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,uint8_t be) {
+    WOLF_CPU_BUS_DEVICE* device = *pdevice;
+    WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE,bus_device);
     pthread_rwlock_rdlock(&(dev->device_rwlock));
     uint8_t stat = read_reg_general(device->bus_controller,addr,device->base_address,STDO_DEVICE_REGS,dev->regs);
 
@@ -41,8 +42,9 @@ static void device_output(WOLF_MMIO_STDO_DEVICE* device,uint8_t write_buf) {
     device->regs[STDO_DEVICE_STAT_REG] = STDO_STAT_OK;
 }
 
-static void device_start(WOLF_CPU_BUS_DEVICE* device) {
-    WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(device,WOLF_MMIO_STDO_DEVICE,bus_device);
+static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
+    WOLF_CPU_BUS_DEVICE* device = *pdevice;
+    WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE,bus_device);
     pthread_rwlock_wrlock(&(dev->device_rwlock));
     if(dev->bus_device->device_busy) { //这用if纯粹是为了效率，否则后面的也会执行
         pthread_rwlock_unlock(&(dev->device_rwlock));
@@ -54,9 +56,9 @@ static void device_start(WOLF_CPU_BUS_DEVICE* device) {
     uint32_t address = bus_controller->addr;
     if(bus_controller->addr < device->base_address + device->need_space && bus_controller->addr >= device->base_address) {
         if(bus_controller->data_cmd_collection.read_write == BUS_RW_READ) 
-            read_reg(device,address,bus_controller->data_cmd_collection.be);
+            read_reg(pdevice,address,bus_controller->data_cmd_collection.be);
         else if(bus_controller->data_cmd_collection.read_write == BUS_RW_WRITE) 
-            write_reg(device,address,bus_controller->data_cmd_collection);
+            write_reg(pdevice,address,bus_controller->data_cmd_collection);
         return; //下一次循环，开始处理命令
     }
     
@@ -76,8 +78,8 @@ static void device_start(WOLF_CPU_BUS_DEVICE* device) {
 }
 //只能调用一次
 WOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
-    WOLF_CPU_BUS_DEVICE* bus_device = (WOLF_CPU_BUS_DEVICE*)malloc(sizeof(WOLF_CPU_BUS_DEVICE));
-    stdo_device = (WOLF_MMIO_STDO_DEVICE*)malloc(sizeof(WOLF_MMIO_STDO_DEVICE));
+    WOLF_CPU_BUS_DEVICE* bus_device = (WOLF_CPU_BUS_DEVICE*)calloc(1,sizeof(WOLF_CPU_BUS_DEVICE));
+    stdo_device = (WOLF_MMIO_STDO_DEVICE*)calloc(1,sizeof(WOLF_MMIO_STDO_DEVICE));
 
     if(stdo_device == NULL || bus_device == NULL)
         return NULL; 

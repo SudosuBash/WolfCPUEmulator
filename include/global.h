@@ -25,7 +25,8 @@
 #define CACHE_L2_GROUPS 1024
 
 #define get_parent_struct(object,type,member) \
-   (type*)((char*)(object) - (size_t)(&(((type*)0)->member)))
+   (type*)((char*)(object) - offsetof(type, member))
+#define malloc(size) calloc(1,size)
 #define KERN_MODE_MASK 0x01
 #define CACHE_OPEN_MASK 0x02
 #define BCR_PGO_MASK 0x04

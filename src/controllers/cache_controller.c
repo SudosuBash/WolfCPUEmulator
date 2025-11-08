@@ -166,7 +166,7 @@ uint8_t ld_cache_l2(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE], uint32_t addr,
 }
 
 WOLF_CACHE_CONTROLLER* init_cache_controller() {
-    WOLF_CACHE_CONTROLLER* cache_controller = (WOLF_CACHE_CONTROLLER*) malloc(sizeof(WOLF_CACHE_CONTROLLER));
+    WOLF_CACHE_CONTROLLER* cache_controller = (WOLF_CACHE_CONTROLLER*) calloc(1,sizeof(WOLF_CACHE_CONTROLLER));
     cache_controller->ld_l1_cache = ld_cache_l1;
     cache_controller->ld_l2_cache = ld_cache_l2;
     cache_controller->rd_l1_groups = rd_cache_l1_groups;

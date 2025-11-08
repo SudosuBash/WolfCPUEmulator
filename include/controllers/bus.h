@@ -24,18 +24,18 @@ typedef struct {
     uint8_t read_write:1
 }BUS_SEND_DATA;
 
-typedef struct WOLF_CPU_BUS_DEVICE WOLF_CPU_BUS_DEVICE;
-typedef struct WOLF_CPU_BUS_CONTROLLER WOLF_CPU_BUS_CONTROLLER;
+typedef struct WOLF_CPU_BUS_DEVICE WOLF_CPU_BUS_DEVICE,*PWOLF_CPU_BUS_DEVICE;
+typedef struct WOLF_CPU_BUS_CONTROLLER WOLF_CPU_BUS_CONTROLLER,*PWOLF_CPU_BUS_CONTROLLER;
 
-typedef void (*bus_reg_device_fn)(WOLF_CPU_BUS_CONTROLLER* bus_ctrl);
-typedef uint8_t (*bus_send_data_fn)(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data);
-typedef BUS_SEND_DATA (*bus_recv_data_fn)(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA bits);
+typedef void (*bus_reg_device_fn)(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl);
+typedef uint8_t (*bus_send_data_fn)(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data);
+typedef BUS_SEND_DATA (*bus_recv_data_fn)(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA bits);
 
 
-typedef void (*device_start_fn)(WOLF_CPU_BUS_DEVICE* device);
+typedef void (*device_start_fn)(PWOLF_CPU_BUS_DEVICE* device);
 
-typedef void (*device_read_reg_fn)(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,uint8_t be);
-typedef void (*device_write_reg_fn)(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA data);
+typedef void (*device_read_reg_fn)(PWOLF_CPU_BUS_DEVICE* device,uint8_t addr,uint8_t be);
+typedef void (*device_write_reg_fn)(PWOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA data);
 
 struct WOLF_CPU_BUS_CONTROLLER {
     uint32_t addr;

@@ -18,22 +18,22 @@ WCPUExecuteResult execute(WOLF_CPU* cpu) {
             switch (final_ex_func) //加速
             {
             case ALU_FUN_CODE_ADD:
-                res1 = cpu->alu->add_operate(cpu->alu,data.valA,data.valC,sgn);
+                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,data.valC,sgn);
                 break;
             case ALU_FUN_CODE_AND:
-                res1 = cpu->alu->and_operate(cpu->alu,data.valA,data.valC);
+                res1 = cpu->alu->and_operate(&cpu->alu,data.valA,data.valC);
                 break;
             case ALU_FUN_CODE_SUB:
-                res1 = cpu->alu->add_operate(cpu->alu,data.valA,-data.valC,sgn);
+                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,-data.valC,sgn);
                 break;
             case ALU_FUN_CODE_OR:
-                res1 = cpu->alu->or_operate(cpu->alu,data.valA,data.valC);
+                res1 = cpu->alu->or_operate(&cpu->alu,data.valA,data.valC);
                 break;
             case ALU_FUN_CODE_XOR:
-                res1 = cpu->alu->xor_operate(cpu->alu,data.valA,data.valC);
+                res1 = cpu->alu->xor_operate(&cpu->alu,data.valA,data.valC);
                 break;
             default: 
-                ecall(cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ALU_FUNC); //异常触发函数
+                cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ALU_FUNC); //异常触发函数
                 res.noexception = 0;
                 break;
             }
@@ -46,10 +46,10 @@ WCPUExecuteResult execute(WOLF_CPU* cpu) {
             switch (ml_mr)
             {
             case ALU_EXFUNC_ML:
-                res1 = cpu->alu->ml_operate(cpu->alu,data.valA,data.valB);
+                res1 = cpu->alu->ml_operate(&cpu->alu,data.valA,data.valB);
                 break;
             case ALU_EXFUNC_MR:
-                res1 = cpu->alu->mr_operate(cpu->alu,data.valA,data.valB);
+                res1 = cpu->alu->mr_operate(&cpu->alu,data.valA,data.valB);
                 break;
             }
             res.valC = res1;

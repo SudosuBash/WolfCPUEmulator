@@ -1,7 +1,8 @@
 #include <controllers/bus.h>
 #include <string.h>
 #include <stdlib.h>
-uint8_t bus_send_data(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
+uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
+    WOLF_CPU_BUS_CONTROLLER* bus_ctrl = *pbus_ctrl;
     data.status = BUS_STATUS_PENDING;
     data.read_write = BUS_RW_WRITE;
     bus_ctrl->data_cmd_collection = data;
@@ -24,7 +25,8 @@ uint8_t bus_send_data(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_
     return status;
 }
 
-BUS_SEND_DATA bus_recv_data(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
+BUS_SEND_DATA bus_recv_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
+    WOLF_CPU_BUS_CONTROLLER* bus_ctrl = *pbus_ctrl;
     data.status = BUS_STATUS_PENDING;
     data.read_write = BUS_RW_READ;
 
@@ -49,10 +51,8 @@ BUS_SEND_DATA bus_recv_data(WOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS
 }
 
 WOLF_CPU_BUS_CONTROLLER* init_bus() {
-    WOLF_CPU_BUS_CONTROLLER* controller = (WOLF_CPU_BUS_CONTROLLER*)malloc(sizeof(WOLF_CPU_BUS_CONTROLLER));
+    WOLF_CPU_BUS_CONTROLLER* controller = (WOLF_CPU_BUS_CONTROLLER*)calloc(1,sizeof(WOLF_CPU_BUS_CONTROLLER));
     if(controller == NULL) return NULL;
-
-    memset(controller,0,sizeof(WOLF_CPU_BUS_CONTROLLER));
 
     controller->send_data = bus_send_data;
     controller->recv_data = bus_recv_data;

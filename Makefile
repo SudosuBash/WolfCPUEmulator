@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Iinclude
+CFLAGS = -g -Iinclude
 LDFLAGS = 
 SRCS = main.c $(wildcard src/*.c) $(wildcard src/**/*.c)
 OBJS = $(SRCS:.c=.o)
@@ -15,4 +15,5 @@ $(TARGET): $(OBJS)
 
 
 clean:
-	del $(TARGET) $(OBJS) src\**\*.o 2>NUL
+	@rm *.o *\*.o *\*\*.o
+	rm $(TARGET) $(OBJS) src\**\*.o 2>NUL

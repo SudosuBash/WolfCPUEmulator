@@ -10,8 +10,9 @@
 #define GET_64_CLEAR_FLAG(num) (0xffffffffffffffff ^ (1 << (num)))
 #define GET_64_SET_FLAG(num) (1 << (num))
 
-static void write_reg(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA data) {
-    WOLF_IRQ_CONTROLLER* dev = get_parent_struct(device,WOLF_IRQ_CONTROLLER, bus_device);
+static void write_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,BUS_SEND_DATA data) {
+    WOLF_CPU_BUS_DEVICE* device = *pdevice;
+    WOLF_IRQ_CONTROLLER* dev = get_parent_struct(pdevice,WOLF_IRQ_CONTROLLER, bus_device);
     pthread_mutex_lock(&(dev->device_rwlock));
     uint8_t stat = write_reg_general(device->bus_controller,addr,device->base_address,IRQ_CONTROLLER_DEVICE_REGS,dev->regs);
     if(stat != STAT_SUCCESS) {
@@ -22,9 +23,9 @@ static void write_reg(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,BUS_SEND_DATA dat
     pthread_mutex_unlock(&(dev->device_rwlock));
 }
 
-static void read_reg(WOLF_CPU_BUS_DEVICE* device,uint8_t addr,uint8_t be) {
-
-    WOLF_IRQ_CONTROLLER* dev = get_parent_struct(device,WOLF_IRQ_CONTROLLER, bus_device);
+static void read_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,uint8_t be) {
+    WOLF_CPU_BUS_DEVICE* device = *pdevice;
+    WOLF_IRQ_CONTROLLER* dev = get_parent_struct(pdevice,WOLF_IRQ_CONTROLLER, bus_device);
     pthread_mutex_lock(&(dev->device_rwlock));
 
     uint32_t value;
@@ -94,21 +95,21 @@ void set_priority(WOLF_IRQ_CONTROLLER* ctrl,uint8_t irq_num,uint8_t prio) {
     ctrl->registered_interrupts[irq_num].status = IRQ_STATUS_OKAY;
 }
 
-void device_start(WOLF_CPU_BUS_DEVICE* device) {
-
-    WOLF_IRQ_CONTROLLER* controller = get_parent_struct(device,WOLF_IRQ_CONTROLLER,bus_device);
+void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
+    WOLF_CPU_BUS_DEVICE* device = *pdevice;
+    WOLF_IRQ_CONTROLLER* controller = get_parent_struct(pdevice,WOLF_IRQ_CONTROLLER,bus_device);
     WOLF_CPU_BUS_CONTROLLER* bus_controller = device->bus_controller;
     
     uint32_t address = bus_controller->addr;
     if(bus_controller->addr < device->base_address + device->need_space && bus_controller->addr >= device->base_address) {
         if(bus_controller->data_cmd_collection.read_write == BUS_RW_READ) 
-            read_reg(device,address,bus_controller->data_cmd_collection.be);
+            read_reg(pdevice,address,bus_controller->data_cmd_collection.be);
         else if(bus_controller->data_cmd_collection.read_write == BUS_RW_WRITE) 
-            write_reg(device,address,bus_controller->data_cmd_collection);
+            write_reg(pdevice,address,bus_controller->data_cmd_collection);
         return; //下一次循环，开始处理命令
     }
     //这个模拟不同时序，异步执行
-    WOLF_CPU* cpu = get_parent_struct(bus_controller,WOLF_CPU,bus);
+    WOLF_CPU* cpu = get_parent_struct(&device->bus_controller,WOLF_CPU,bus);
 
     pthread_mutex_lock(&(controller->device_rwlock));
     uint8_t cmd = controller->regs[IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR];
@@ -155,15 +156,15 @@ void device_start(WOLF_CPU_BUS_DEVICE* device) {
             break;
     }
     if(controller->int_valid_flag) {
-        irq_call(cpu->ecall_controller,IREASON_FOR_EXTERNAL_IRQ);
+        cpu->ecall_controller->irq_caller(&cpu->ecall_controller,IREASON_FOR_EXTERNAL_IRQ);
     }
     controller->regs[IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR] = 0;
     pthread_mutex_unlock(&(controller->device_rwlock));
 }
 
 WOLF_IRQ_CONTROLLER* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller) {
-    WOLF_CPU_BUS_DEVICE* bus_device = (WOLF_CPU_BUS_DEVICE*)malloc(sizeof(WOLF_CPU_BUS_DEVICE));
-    WOLF_IRQ_CONTROLLER* irq_controller = (WOLF_IRQ_CONTROLLER*) malloc(sizeof(WOLF_IRQ_CONTROLLER));
+    WOLF_CPU_BUS_DEVICE* bus_device = (WOLF_CPU_BUS_DEVICE*)calloc(1,sizeof(WOLF_CPU_BUS_DEVICE));
+    WOLF_IRQ_CONTROLLER* irq_controller = (WOLF_IRQ_CONTROLLER*) calloc(1,sizeof(WOLF_IRQ_CONTROLLER));
     if (bus_device == NULL || irq_controller == NULL) return NULL;
     memset(irq_controller,0,sizeof(WOLF_IRQ_CONTROLLER));
     memset(bus_device,0,sizeof(WOLF_CPU_BUS_DEVICE));

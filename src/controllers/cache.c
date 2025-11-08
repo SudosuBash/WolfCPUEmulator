@@ -2,13 +2,13 @@
 #include <stddef.h>
 #include <global.h>
 MACHINE_L1_CACHE_GROUP** init_l1_group(uint32_t groups) {
-    MACHINE_L1_CACHE_GROUP** l1cache = (MACHINE_L1_CACHE_GROUP**) malloc(sizeof(MACHINE_L1_CACHE_GROUP*) * groups);
+    MACHINE_L1_CACHE_GROUP** l1cache = (MACHINE_L1_CACHE_GROUP**) calloc(groups,sizeof(MACHINE_L1_CACHE_GROUP*));
     memset(l1cache,0,sizeof(l1cache));
     for(int i=0;i<groups;i++) {
-        MACHINE_L1_CACHE_GROUP* c1 = (MACHINE_L1_CACHE_GROUP*)malloc(sizeof(MACHINE_L1_CACHE_GROUP));
+        MACHINE_L1_CACHE_GROUP* c1 = (MACHINE_L1_CACHE_GROUP*)calloc(1,sizeof(MACHINE_L1_CACHE_GROUP));
         l1cache[i] = c1;
-        MACHINE_L1_CACHE_LINE* line1 = (MACHINE_L1_CACHE_LINE*) malloc(sizeof(MACHINE_L1_CACHE_LINE));
-        MACHINE_L1_CACHE_LINE* line2 = (MACHINE_L1_CACHE_LINE*) malloc(sizeof(MACHINE_L1_CACHE_LINE));
+        MACHINE_L1_CACHE_LINE* line1 = (MACHINE_L1_CACHE_LINE*) calloc(1,sizeof(MACHINE_L1_CACHE_LINE));
+        MACHINE_L1_CACHE_LINE* line2 = (MACHINE_L1_CACHE_LINE*) calloc(1,sizeof(MACHINE_L1_CACHE_LINE));
 
         memset(line1,0,sizeof(MACHINE_L1_CACHE_LINE));
         memset(line2,0,sizeof(MACHINE_L1_CACHE_LINE));
@@ -20,13 +20,13 @@ MACHINE_L1_CACHE_GROUP** init_l1_group(uint32_t groups) {
 }
 
 MACHINE_L2_CACHE_GROUP** init_l2_group(uint32_t groups) {
-    MACHINE_L2_CACHE_GROUP** l1cache = (MACHINE_L2_CACHE_GROUP**) malloc(sizeof(MACHINE_L2_CACHE_GROUP*) * groups);
+    MACHINE_L2_CACHE_GROUP** l1cache = (MACHINE_L2_CACHE_GROUP**) calloc(groups,sizeof(MACHINE_L2_CACHE_GROUP*));
     memset(l1cache,0,sizeof(l1cache));
     for(int i=0;i<groups;i++) {
-        MACHINE_L2_CACHE_GROUP* c1 = (MACHINE_L2_CACHE_GROUP*)malloc(sizeof(MACHINE_L2_CACHE_GROUP));
+        MACHINE_L2_CACHE_GROUP* c1 = (MACHINE_L2_CACHE_GROUP*)calloc(1,sizeof(MACHINE_L2_CACHE_GROUP));
         l1cache[i] = c1;
-        MACHINE_L2_CACHE_LINE* line1 = (MACHINE_L2_CACHE_LINE*) malloc(sizeof(MACHINE_L2_CACHE_LINE));
-        MACHINE_L2_CACHE_LINE* line2 = (MACHINE_L2_CACHE_LINE*) malloc(sizeof(MACHINE_L2_CACHE_LINE));
+        MACHINE_L2_CACHE_LINE* line1 = (MACHINE_L2_CACHE_LINE*) calloc(1,sizeof(MACHINE_L2_CACHE_LINE));
+        MACHINE_L2_CACHE_LINE* line2 = (MACHINE_L2_CACHE_LINE*) calloc(1,sizeof(MACHINE_L2_CACHE_LINE));
 
         memset(line1,0,sizeof(MACHINE_L2_CACHE_LINE));
         memset(line2,0,sizeof(MACHINE_L2_CACHE_LINE));

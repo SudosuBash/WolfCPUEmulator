@@ -38,8 +38,8 @@ typedef struct {
     uint32_t val4bIn;
 } RAM_IN_ARGS;
 
-typedef struct RAM_INTERFACE_UNIT RAM_INTERFACE_UNIT;
-typedef RAM_OPERATOR_RESULT (*ram_operator_func)(RAM_INTERFACE_UNIT* unit,RAM_IN_ARGS input);
+typedef struct RAM_INTERFACE_UNIT RAM_INTERFACE_UNIT,*PRAM_INTERFACE_UNIT;
+typedef RAM_OPERATOR_RESULT (*ram_operator_func)(PRAM_INTERFACE_UNIT* unit,RAM_IN_ARGS input);
 
 struct RAM_INTERFACE_UNIT {
     uint32_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM];
