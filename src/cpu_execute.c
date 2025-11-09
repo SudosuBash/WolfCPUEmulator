@@ -55,7 +55,6 @@ WCPUExecuteResult execute(WOLF_CPU* cpu) {
             res.valC = res1;
             break;
         }
-
         case ICODE_JMP_I: {
             uint8_t val = data.ExCond & 0x1000 >> 3;
             data.valA = Through32(val,data.valA) | Through32(!val,cpu->pc);
