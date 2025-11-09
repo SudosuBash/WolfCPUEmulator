@@ -1,6 +1,6 @@
 #include <cpu.h>
 
-WCPUMemResult memory(WOLF_CPU* cpu) {
+void memory(WOLF_CPU* cpu) {
     WCPUExecuteResult res = cpu->ex_data_reg;
     WCPUMemResult mem_res = {0};
     WOLF_CPU_MMU_CONTROLLER* controller = cpu->mmu;
@@ -45,6 +45,5 @@ WCPUMemResult memory(WOLF_CPU* cpu) {
     }
 CPU_MEM_END_STATUS:
     cpu->mem_data_reg = mem_res;
-    return mem_res;
 }
 

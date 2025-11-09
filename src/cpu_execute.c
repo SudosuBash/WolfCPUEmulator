@@ -1,6 +1,6 @@
 #include <cpu.h>
 
-WCPUExecuteResult execute(WOLF_CPU* cpu) {
+void execute(WOLF_CPU* cpu) {
     WCPUDecodedData data = cpu->id_data_reg;
     uint8_t icode = data.icode;
     WCPUExecuteResult res = {0};
@@ -90,5 +90,4 @@ WCPUExecuteResult execute(WOLF_CPU* cpu) {
     res.valA = data.valA;
 CPU_EXEC_END_STATUS:
     cpu->ex_data_reg = res;
-    return res;
 }

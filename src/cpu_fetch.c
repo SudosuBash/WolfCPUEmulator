@@ -95,17 +95,18 @@ static inline uint8_t getExCond(uint8_t type,uint8_t icode,uint32_t data) {
 
 static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
     uint8_t cond = icode == ICODE_MOV;
-    uint8_t val1 = Through8(cond,(icode >> 16) & 0b1111);
+    uint8_t movExFlag = (data >> 16) & 0b1111;
+    uint8_t val1 = Through8(cond,((movExFlag & 0b1100) << 1) | 0b0011);
     cond = icode == ICODE_ALU || ICODE_MLMR;
     uint8_t val2 = Through8(cond,(icode >> 12) & 0b11111);
 
     return Through8(type^1, val1 | val2);
 }
-WCPUFetchData fetchData(WOLF_CPU* cpu) {
+void fetch_data(WOLF_CPU* cpu) {
     WCPUFetchData result;
     PWOLF_CPU_ECALL_CONTROLLER* ecall_ctrler = &cpu->ecall_controller;
     PWOLF_CPU_MMU_CONTROLLER* ctrler = &(cpu->mmu);
-    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc,4);
+    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc,0b1111);
     if(mmu_res.stat != 0) {
         cpu->ecall_controller->ecaller(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat));
         result.noexception = 0;
@@ -147,5 +148,4 @@ WCPUFetchData fetchData(WOLF_CPU* cpu) {
     }
 WCPU_FETCH_DATA_END:
     cpu->if_data_reg = result;
-    return result;
 } 

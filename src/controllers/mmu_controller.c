@@ -38,7 +38,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     WCPUExecuteResult res = cpu->ex_data_reg;
     WOLF_PADDR_GET paddr = paddr_get(cpu,addr);
 
-    if(paddr.addr & BE_ALIGN(data.be) != 0) { //物理内存地址要求4字节对齐
+    if(paddr.addr & (BE_ALIGN(data.be)) != 0) { //物理内存地址要求4字节对齐
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
     }
@@ -78,7 +78,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 }
 
 static const uint32_t bios_code[512 / 4] = {
-    0x02100100
+    0x0218ffff
 };
 MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be) {
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
@@ -89,7 +89,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         res1.stat = paddr.stat;
         return res1;
     }
-    if(paddr.addr & BE_ALIGN(be) != 0) { //物理内存地址要求4字节对齐
+    if(paddr.addr & (BE_ALIGN(be)) != 0) { 
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
     }

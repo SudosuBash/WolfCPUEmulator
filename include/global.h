@@ -41,10 +41,14 @@
 
 
 #define BE_DATA(data) \
-   Through8((data)==0b1,1) | \
+   (Through8((data)==0b1,1) | \
    Through8((data)==0b11,2) | \
-   Through8((data)==0b1111,4)
+   Through8((data)==0b1111,4))
 
 #define BE_ALIGN(data) \
    BE_DATA(data) - 1
+#define BE_MASK_GEN(data) \
+   (Through32((data)==0b1,0xff) | \
+   Through32((data)==0b10,0xffff) | \
+   Through32((data)==0b00,0xffffffff))
 #endif

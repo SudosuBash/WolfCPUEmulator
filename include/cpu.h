@@ -128,6 +128,10 @@ typedef struct {
 } WCPUDecodedData;
 
 typedef struct {
+    
+} WCPUWBResult;
+
+typedef struct {
     uint32_t pc;
     
     CPU_General_Registers gen_regs;
@@ -150,20 +154,23 @@ typedef struct {
     WCPUDecodedData id_data_reg;
     WCPUExecuteResult ex_data_reg;
     WCPUMemResult mem_data_reg;
+    WCPUWBResult wb_result_reg;
 
     pthread_mutex_t clock_execution; //CPU 时序锁
     //真实电路都是按照时序来的，不需要这玩意，这个只是模拟时序
 } WOLF_CPU;
-typedef struct {
-    
-} WCPUWBResult;
-WCPUExecuteResult execute(WOLF_CPU* cpu);
-void start_cpu(WOLF_CPU* cpu);
-WCPUFetchData fetchData(WOLF_CPU* cpu);
-WCPUMemResult memory(WOLF_CPU* cpu);
-WCPUDecodedData decode(WOLF_CPU* cpu);
-void free_cpu(WOLF_CPU** cpu);
 
-void init_env();
+void access_check(WOLF_CPU* cpu);
+void execute(WOLF_CPU* cpu);
+void fetch_data(WOLF_CPU* cpu);
+void memory(WOLF_CPU* cpu);
+void decode(WOLF_CPU* cpu);
+void writeback(WOLF_CPU* cpu);
+
+uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg);
+
+void start_cpu(WOLF_CPU* cpu);
 WOLF_CPU* init_cpu();
+void free_cpu(WOLF_CPU** cpu);
+void init_env();
 #endif

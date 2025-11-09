@@ -1,23 +1,5 @@
 #include <cpu.h>
 
-uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
-    if(lreg != 0 && lreg < MAX_GEN_REGISTER_COUNT) {
-        return cpu->gen_regs.r[lreg-1];
-    }
-    switch(lreg) {
-        case CPU_REG_SPE_PGBASE:
-            return cpu->spe_regs.pg_mode_base_addr_reg;
-        case CPU_REG_ECALL_ECBASE:
-            return cpu->ecall_regs.mpc;
-        case CPU_REG_ECALL_ICBASE:
-            return cpu->irq_regs.mpc;
-        case CPU_REG_SPE_BCR:
-            return cpu->spe_regs.bcr;
-        case CPU_REG_SPE_FLAGS:
-            return cpu->spe_regs.flags;
-    }
-    
-}
 
 uint8_t regValid(uint8_t reg1) {
     return !((reg1 == 15 || reg1 == 14) ||
@@ -39,7 +21,7 @@ uint32_t getiData(uint8_t icode,uint32_t idata) {
         Through32(!code_valid && !code_valid2 && !code_valid3,idata);
 }
 
-WCPUDecodedData decode(WOLF_CPU* cpu) {
+void decode(WOLF_CPU* cpu) {
     WCPUFetchData data = cpu->if_data_reg;
 
     WCPUDecodedData res = {0};
@@ -64,5 +46,4 @@ WCPUDecodedData decode(WOLF_CPU* cpu) {
     }
 CPU_DECODE_END_STATUS:
     cpu->id_data_reg = res;
-    return res;
 }

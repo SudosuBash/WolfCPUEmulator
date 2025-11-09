@@ -6,10 +6,12 @@ uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
         pthread_mutex_lock(&cpu->clock_execution);
-        fetchData(cpu);
+        fetch_data(cpu);
+        access_check(cpu);
         decode(cpu);
         execute(cpu);
         memory(cpu);
+        writeback(cpu);
         clk += 1;
         pthread_mutex_unlock(&cpu->clock_execution);
     }
@@ -71,4 +73,23 @@ void free_cpu(WOLF_CPU** cpu) {
         free(*cpu);
         *cpu = NULL;
     }
+}
+
+uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
+    if(lreg != 0 && lreg < MAX_GEN_REGISTER_COUNT) {
+        return cpu->gen_regs.r[lreg-1];
+    }
+    switch(lreg) {
+        case CPU_REG_SPE_PGBASE:
+            return cpu->spe_regs.pg_mode_base_addr_reg;
+        case CPU_REG_ECALL_ECBASE:
+            return cpu->ecall_regs.mpc;
+        case CPU_REG_ECALL_ICBASE:
+            return cpu->irq_regs.mpc;
+        case CPU_REG_SPE_BCR:
+            return cpu->spe_regs.bcr;
+        case CPU_REG_SPE_FLAGS:
+            return cpu->spe_regs.flags;
+    }
+    
 }

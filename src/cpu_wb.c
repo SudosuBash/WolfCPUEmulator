@@ -1,1 +1,35 @@
 #include <cpu.h>
+static inline uint32_t get_reg_data(uint32_t origin,uint32_t mask,uint32_t data) {
+    return (origin & ~mask) | (data & mask);
+}
+//没写完
+void writeback(WOLF_CPU* cpu) {
+    WCPUMemResult result = cpu->mem_data_reg;
+    if(result.noexception == 0) {
+        return;
+    }
+    WCPUWBResult res;
+    uint8_t icode = result.icode;
+    uint8_t cond = (icode == ICODE_MOV);
+    
+    switch(cond) {
+        case ICODE_MOV: {
+            uint32_t mask = BE_MASK_GEN(result.ExFlag >> 3);
+            cpu->gen_regs.r[result.destReg] = get_reg_data(
+                cpu->gen_regs.r[result.destReg],
+                mask,
+                result.valC
+            );
+            break;
+        }
+        case ICODE_ALU: {
+            cpu->gen_regs.r[result.destReg] = get_reg_data(
+                cpu->gen_regs.r[result.destReg],
+                0b1111,
+                result.valC
+            );
+            break;
+        }
+    }
+    cpu->wb_result_reg = res;
+}
