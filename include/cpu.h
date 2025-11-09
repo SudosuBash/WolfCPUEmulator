@@ -54,7 +54,9 @@
 #define ICODE_IRET_EXFUNC 0x10
 #define ICODE_ERET_EXFUNC 0x11
 
-
+#define OPER_FLAG_1B 0b01
+#define OPER_FLAG_2B 0b10
+#define OPER_FLAG_4B 0b00
 #define CMD_ITYPE 0
 #define CMD_RTYPE 1
 

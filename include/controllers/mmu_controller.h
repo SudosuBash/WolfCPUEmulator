@@ -40,7 +40,7 @@ typedef struct {
     uint32_t data;
 } MMU_STATUS;
 
-typedef MMU_STATUS (*mmu_memory_rd)(PWOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr);
+typedef MMU_STATUS (*mmu_memory_rd)(PWOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr,uint8_t be);
 typedef MMU_STATUS (*mmu_memory_wr)(PWOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr,MMU_DATA data);
 
 struct WOLF_CPU_MMU{

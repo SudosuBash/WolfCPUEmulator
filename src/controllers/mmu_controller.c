@@ -18,12 +18,12 @@ WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
         uint16_t pde = (vaddr >> VADDR_OFFSET_PDE);
 
         uint32_t page_base_address = cpu->spe_regs.pg_mode_base_addr_reg;
-        RAM_RD_STATUS stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pde);
+        RAM_RD_STATUS stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pde,0b1111);
         res.stat = BCR_RAM_ERR;
         page_base_address = stat.data.offset4;
 
         //还得加权限管理，计算页表位置等，这个以后再写
-        stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pte);
+        stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pte,0b1111);
         res.stat = BCR_RAM_ERR;
         if(res.stat != 0) return res;
     }
@@ -38,7 +38,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     WCPUExecuteResult res = cpu->ex_data_reg;
     WOLF_PADDR_GET paddr = paddr_get(cpu,addr);
 
-    if(paddr.addr & 3 != 0) { //物理内存地址要求4字节对齐
+    if(paddr.addr & BE_ALIGN(data.be) != 0) { //物理内存地址要求4字节对齐
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
     }
@@ -80,7 +80,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 static const uint32_t bios_code[512 / 4] = {
     0x02100100
 };
-MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr) {
+MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be) {
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
     WOLF_CPU_MMU_CONTROLLER* controller = *pmmu;
     MMU_STATUS res1 = {0};
@@ -89,7 +89,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr) {
         res1.stat = paddr.stat;
         return res1;
     }
-    if(paddr.addr & 3 != 0) { //物理内存地址要求4字节对齐
+    if(paddr.addr & BE_ALIGN(be) != 0) { //物理内存地址要求4字节对齐
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
     }
@@ -118,7 +118,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr) {
     } else if(paddr.addr < BASE_MMU_ADDR) { //访问 MMIO
         WOLF_CPU_BUS_CONTROLLER* controller = cpu->bus;
         BUS_SEND_DATA bits = {0};
-        bits.be = 0b1111;
+        bits.be = be;
         bits.read_write = BUS_RW_READ;
         bits = controller->recv_data(&cpu->bus,paddr.addr,bits);
         if(bits.status == BUS_STATUS_ERROR) {

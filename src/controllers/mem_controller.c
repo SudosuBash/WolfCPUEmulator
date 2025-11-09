@@ -29,7 +29,7 @@ RAM_RD_STATUS rd_memory(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
     return stat;
 }
 
-RAM_RD_STATUS rd_memory_4b(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
+RAM_RD_STATUS rd_memory_4b(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8_t be) {
     RAM_RD_STATUS stat = {0};
 
     RAM_IN_ARGS input = {0};
@@ -41,13 +41,14 @@ RAM_RD_STATUS rd_memory_4b(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
 
     stat.dmem_error = result.status_flag & 1;
     if(!stat.dmem_error) {
-        memcpy(stat.data.offset,result.data,4);
+        memcpy(stat.data.offset,result.data,BE_DATA(be));
     }
+
 
     return stat;
 }
 
-RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value) {
+RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value,uint32_t be) {
     RAM_WR_STATUS stat = {0};
 
     RAM_IN_ARGS input = {0};
@@ -59,7 +60,7 @@ RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t va
 
     stat.dmem_error = result.status_flag & 1;
     if(!stat.dmem_error) {
-        memcpy(&(stat.offset4),result.data,4);
+        memcpy(&(stat.offset4),result.data,BE_DATA(be));
     }
     return stat; 
 }

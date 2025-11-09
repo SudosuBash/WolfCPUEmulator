@@ -105,7 +105,7 @@ WCPUFetchData fetchData(WOLF_CPU* cpu) {
     WCPUFetchData result;
     PWOLF_CPU_ECALL_CONTROLLER* ecall_ctrler = &cpu->ecall_controller;
     PWOLF_CPU_MMU_CONTROLLER* ctrler = &(cpu->mmu);
-    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc);
+    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc,4);
     if(mmu_res.stat != 0) {
         cpu->ecall_controller->ecaller(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat));
         result.noexception = 0;
