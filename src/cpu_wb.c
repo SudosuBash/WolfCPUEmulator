@@ -5,16 +5,19 @@ static inline uint32_t get_reg_data(uint32_t origin,uint32_t mask,uint32_t data)
 //没写完
 void writeback(WOLF_CPU* cpu) {
     WCPUMemResult result = cpu->mem_data_reg;
-    if(result.noexception == 0) {
-        return;
-    }
+   
     WCPUWBResult res;
+    if(result.noexception == 0) {
+        res.noexception = 0;
+        goto WB_ERR_END;
+        
+    }
     uint8_t icode = result.icode;
     uint8_t cond = (icode == ICODE_MOV);
     
     switch(cond) {
         case ICODE_MOV: {
-            uint32_t mask = BE_MASK_GEN(result.ExFlag >> 3);
+            uint32_t mask = BE_MASK_GEN(result.ExFlag >> 2);
             cpu->gen_regs.r[result.destReg] = get_reg_data(
                 cpu->gen_regs.r[result.destReg],
                 mask,
@@ -30,6 +33,19 @@ void writeback(WOLF_CPU* cpu) {
             );
             break;
         }
+        case ICODE_LERE: {
+            cpu->gen_regs.r[result.destReg] = result.valB;
+            break;
+        }
+        case ICODE_LIRE: {
+            cpu->gen_regs.r[result.destReg] = result.valB;
+            break;
+        }
     }
+    
+    res.icode = result.icode;
+    res.valC = result.valC;
+    res.noexception = result.noexception;
+WB_ERR_END:
     cpu->wb_result_reg = res;
 }

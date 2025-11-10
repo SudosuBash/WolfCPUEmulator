@@ -12,6 +12,7 @@ void start_cpu(WOLF_CPU *cpu) {
         execute(cpu);
         memory(cpu);
         writeback(cpu);
+        update_PC(cpu);
         clk += 1;
         pthread_mutex_unlock(&cpu->clock_execution);
     }
@@ -77,7 +78,7 @@ void free_cpu(WOLF_CPU** cpu) {
 
 uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
     if(lreg != 0 && lreg < MAX_GEN_REGISTER_COUNT) {
-        return cpu->gen_regs.r[lreg-1];
+        return cpu->gen_regs.r[lreg];
     }
     switch(lreg) {
         case CPU_REG_SPE_PGBASE:
@@ -90,6 +91,8 @@ uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
             return cpu->spe_regs.bcr;
         case CPU_REG_SPE_FLAGS:
             return cpu->spe_regs.flags;
+        case CPU_REG_PC:
+            return cpu->pc;
     }
     
 }

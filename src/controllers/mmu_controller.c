@@ -78,7 +78,10 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 }
 
 static const uint32_t bios_code[512 / 4] = {
-    0x0218ffff
+    0x0214ffff,
+    0x023000a0,
+    //0x40180006,
+    0x4010a0a0
 };
 MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be) {
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
@@ -135,7 +138,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         res1.data = controller->regs[pos_addr];
     } else {
 //还没有实现对应逻辑，为了能够执行，暂时先用临时一个uint8_t数组代替
-        res1.data = bios_code[(paddr.addr - BASE_BIOS_ADDR) & 0x3];
+        res1.data = bios_code[(paddr.addr - BASE_BIOS_ADDR) >>2];
     }
 
     return res1;

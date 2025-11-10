@@ -25,22 +25,30 @@
 #define BASE_MMU_ADDR 0xfffffd00
 #define BASE_BIOS_ADDR 0xfffffe00
 //BIOS 512 B
-
+#define CPU_REG_PC 15
 #define CPU_REG_SPE_BCR 0b10000
 #define CPU_REG_SPE_SCR 0b10001
 #define CPU_REG_SPE_FLAGS 0b10010
 #define CPU_REG_SPE_PGBASE 0b10011
 #define CPU_REG_ECALL_ECBASE 0b10100
+//异常基址寄存器
 #define CPU_REG_ECALL_ICBASE 0b10101
-
-#define CPU_REG_RSP 13
+//中断基址寄存器
+#define CPU_REG_ECALL_REASON 0b10110
+//异常发生原因寄存器
+#define CPU_REG_IRQ_REASON 0b10111
+//中断发生原因寄存器
+#define CPU_REG_RSP 14
 
 
 #define ICODE_MOV 0b000001
 #define ICODE_ALU 0b000010
 #define ICODE_MLMR 0b000011
-#define ICODE_JMP_I 0b100000
-#define ICODE_JMP_II 0b100001
+
+#define ICODE_ZWCB 0b000100
+#define ICODE_ZWCW 0b000101
+
+#define ICODE_JMP 0b100000
 #define ICODE_ECALL 0b100010
 #define ICODE_OCALL 0b100011
 #define ICODE_RSCR 0b110001
@@ -49,6 +57,10 @@
 #define ICODE_LIBR 0b110100
 #define ICODE_LEBR 0b110101
 #define ICODE_RET 0b100100
+//ret
+#define ICODE_LIRE 0b110101
+#define ICODE_LERE 0b110110
+//lier: Load IRQ EXCEPTION Reason %r1
 
 #define ICODE_RET_EXFUNC 0x01
 #define ICODE_IRET_EXFUNC 0x10
@@ -78,6 +90,8 @@
 #define ALU_EXFUNC_ML 0x0
 #define ALU_EXFUNC_MR 0x1
 
+#define EXCOND_R1_ON(excond) ((excond) >> 3)
+#define EXFLAG_R1_ON(exfunc) ((exfunc) >> 3)
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;
@@ -128,7 +142,9 @@ typedef struct {
 } WCPUDecodedData;
 
 typedef struct {
-    
+    uint8_t icode;
+    uint32_t valC;
+    uint8_t noexception:1;
 } WCPUWBResult;
 
 typedef struct {
@@ -166,6 +182,7 @@ void fetch_data(WOLF_CPU* cpu);
 void memory(WOLF_CPU* cpu);
 void decode(WOLF_CPU* cpu);
 void writeback(WOLF_CPU* cpu);
+void update_PC(WOLF_CPU* cpu);
 
 uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg);
 

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define MAX_GEN_REGISTER_COUNT 14
+#define MAX_GEN_REGISTER_COUNT 15
 typedef struct {
     uint32_t r[MAX_GEN_REGISTER_COUNT];
 } CPU_General_Registers;
