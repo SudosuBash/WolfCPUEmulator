@@ -1,6 +1,19 @@
-
+#include <stdio.h>
 #include <cpu.h>
-int main() {
+#include <bios_loader/bios.h>
+
+int rd_bios(char* filec,BIOS_FILE* bf) {
+    BIOS_FILE f;
+    FILE* fp = fopen(filec,"rb");
+    if(fp == NULL) {
+        printf("Sorry,Load BIOS Failed, Status = %d\n",errno);
+        return -1;
+    }
+    return 0;
+}
+int main(int argc,char* argv[]) {
+    printf("Welcome to Wolf CPU Emulator.\n");
+    printf("Now starting CPU....\n");
     init_env();
     return 0;
 }

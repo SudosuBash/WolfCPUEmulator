@@ -45,22 +45,48 @@
 #define ICODE_ALU 0b000010
 #define ICODE_MLMR 0b000011
 
+#define ICODE_PUSH 0b000100
+//R类
+#define ICODE_POP 0b000101
+//R类
+
 #define ICODE_ZWCB 0b000100
+//R类
 #define ICODE_ZWCW 0b000101
+//R类
 
 #define ICODE_JMP 0b100000
-#define ICODE_ECALL 0b100010
 #define ICODE_OCALL 0b100011
-#define ICODE_RSCR 0b110001
-#define ICODE_LSCR 0b110010
-#define ICODE_LPGR 0b110011
-#define ICODE_LIBR 0b110100
-#define ICODE_LEBR 0b110101
+
+#define ICODE_ECALL 0b100010
+//I类
 #define ICODE_RET 0b100100
-//ret
-#define ICODE_LIRE 0b110101
-#define ICODE_LERE 0b110110
+//R类
+#define ICODE_RIRE 0b100101
+//R类
+#define ICODE_RERE 0b100110
+//R类
 //lier: Load IRQ EXCEPTION Reason %r1
+
+//SCR控制器
+#define ICODE_RSCR 0b110000
+//R类
+#define ICODE_LSCR 0b110001
+//分页模式基地址
+//R类
+
+#define ICODE_LPGR 0b110010
+//异常/中断进入的特权级寄存器
+//R类
+#define ICODE_LEPV 0b110011
+//R类
+#define ICODE_LIPV 0b110100
+//异常/中断模式基址
+//R类
+#define ICODE_LIBR 0b110101
+//R类
+#define ICODE_LEBR 0b110110
+//R类
 
 #define ICODE_RET_EXFUNC 0x01
 #define ICODE_IRET_EXFUNC 0x10
@@ -92,11 +118,49 @@
 
 #define EXCOND_R1_ON(excond) ((excond) >> 3)
 #define EXFLAG_R1_ON(exfunc) ((exfunc) >> 3)
+#define IS_ITYPE(val) ((val) ^ 1)
+#define IS_RTYPE(val) (val)
+#define IS_PRIVILEGE_INSTRUCTION(icode) ((icode) >>4) == 0b11 
+
+#define IS_ICODE_INVALID(icode,type) \
+    (((icode) != ICODE_ALU \
+        && (icode) != ICODE_ECALL \
+        && (icode) != ICODE_JMP \ 
+        && (icode) != ICODE_LEBR \
+        && (icode) != ICODE_LIBR \
+        && (icode) != ICODE_LPGR \
+        && (icode) != ICODE_LSCR \
+        && (icode) != ICODE_MLMR \
+        && (icode) != ICODE_MOV \
+        && (icode) != ICODE_OCALL \
+        && (icode) != ICODE_RET \
+        && (icode) != ICODE_RSCR \
+        && (icode) != ICODE_RIRE \
+        && (icode) != ICODE_RERE \
+        && (icode) != ICODE_LEPV \
+        && (icode) != ICODE_LIPV \
+        && (icode) != ICODE_ZWCB \
+        && (icode) != ICODE_ZWCW)  \
+    || ((( \
+        (icode) == ICODE_PUSH || \
+        (icode) == ICODE_POP || \
+        (icode) == ICODE_ZWCB || \
+        (icode) == ICODE_ZWCW || \
+        (icode) == ICODE_RET || \
+        (icode) == ICODE_RIRE || \
+        (icode) == ICODE_RERE || \
+        IS_PRIVILEGE_INSTRUCTION(icode) \
+        ) && !IS_RTYPE(type)) \
+    ) || ( \
+        ((icode) == ICODE_ECALL) && \
+        !IS_ITYPE(type) \
+    ))
+    
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;
-    uint8_t reg1:5;
-    uint8_t reg2:5;
+    uint8_t reg1:4;
+    uint8_t reg2:4;
     uint16_t idata;
     uint8_t aluExFunc:3;
     uint8_t jmpExCond:4;

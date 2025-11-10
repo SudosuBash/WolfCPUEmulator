@@ -33,11 +33,11 @@ void writeback(WOLF_CPU* cpu) {
             );
             break;
         }
-        case ICODE_LERE: {
+        case ICODE_RERE: {
             cpu->gen_regs.r[result.destReg] = result.valB;
             break;
         }
-        case ICODE_LIRE: {
+        case ICODE_RIRE: {
             cpu->gen_regs.r[result.destReg] = result.valB;
             break;
         }

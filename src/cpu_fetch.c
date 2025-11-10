@@ -3,7 +3,8 @@
 
 static inline uint8_t getExCond(uint8_t type,uint8_t icode,uint32_t data) {
     uint8_t val = Through8(icode == ICODE_JMP,(data >> 16) & 0b1111);
-    return Through8(type ^ 1,val);
+    //以上为 I 类指令的解码器
+    return Through8(IS_ITYPE(type),val);
 }
 
 static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
@@ -31,34 +32,38 @@ static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
     uint8_t icodeG = (icode == ICODE_LIBR);
     uint8_t regB7 = CPU_REG_ECALL_ICBASE;
     //Libr: rb = ICBASE
-    uint8_t icodeH = (icode == ICODE_LERE);
+    uint8_t icodeH = (icode == ICODE_RERE);
     uint8_t regB8 = CPU_REG_ECALL_REASON;
 
-    uint8_t icodeI = (icode == ICODE_LIRE);
+    uint8_t icodeI = (icode == ICODE_RIRE);
     uint8_t regB9 = CPU_REG_IRQ_REASON;
 
-    return Through8(!type,Through8(icodeB,regB2)) |
-        Through8(!type,Through8(icodeC,regB3)) |
-        Through8(!type,Through8(icodeD,regB4)) |
-        Through8(!type,Through8(icodeE,regB5)) |
-        Through8(!type,Through8(icodeF,regB6)) |
-        Through8(!type,Through8(icodeG,regB7)) |
-        Through8(!type,Through8(icodeH,regB8)) |
-        Through8(!type,Through8(icodeI,regB9)) ;
+    uint8_t final_itype_val = Through8(icodeB,regB2) |
+        Through8(icodeC,regB3) |
+        Through8(icodeD,regB4) |
+        Through8(icodeE,regB5) |
+        Through8(icodeF,regB6) |
+        Through8(icodeG,regB7) |
+        Through8(icodeH,regB8) |
+        Through8(icodeI,regB9) ;
+    //以上为 I 类指令的解码器
+    return Through8(IS_ITYPE(type), final_itype_val);
 }
 
 
 static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
-    uint8_t cond = icode == ICODE_MOV;
-    uint8_t movExFlag = (data >> 16) & 0b1111;
+    uint8_t cond = icode == ICODE_MOV; 
+    uint8_t movExFlag = (data >> 16) & 0b11111;
     uint8_t val1 = Through8(cond,movExFlag);
     
     cond = icode == ICODE_ALU || ICODE_MLMR;
-    uint8_t val2 = Through8(cond,(icode >> 12) & 0b1111);
+    uint8_t val2 = Through8(cond,(icode >> 12) & 0b11111);
 
     cond = icode == ICODE_OCALL;
-    uint8_t val3 = Through8(cond,(icode >> 16) & 0b1111);
-    return Through8(type^1, val1 | val2 | val3);
+    uint8_t val3 = Through8(cond,(icode >> 16) & 0b11111);
+    uint8_t final_itype_val = val1 | val2 | val3;
+    //以上为 I 类指令的解码器
+    return Through8(IS_ITYPE(type), final_itype_val);
 }
 
 static inline uint8_t getLRegisterA(uint8_t type,uint8_t icode,uint32_t data) {
@@ -72,9 +77,11 @@ static inline uint8_t getLRegisterA(uint8_t type,uint8_t icode,uint32_t data) {
       (icode == ICODE_LPGR) ||
       (icode == ICODE_LEBR) ||
       (icode == ICODE_LIBR) ||
-      (icode == ICODE_LIRE) ||
-      (icode == ICODE_LERE);
-    uint8_t regA = (data >> 20) & 0x1f;
+      (icode == ICODE_RIRE) ||
+      (icode == ICODE_RERE) ||
+      (icode == ICODE_ZWCB) ||
+      (icode == ICODE_ZWCW);
+    uint8_t regA = (data >> 20) & 0xf;
     
     uint8_t icodeB = 
         (icode == ICODE_RET);
@@ -108,9 +115,10 @@ static inline uint32_t getIData(uint8_t type, uint8_t icode,uint32_t data) {
 
     cond = (icode == ICODE_ECALL);
     uint32_t icmd6_val = Through32(cond,(data & 0xff)); 
-    uint32_t final = icmd6_val | icmd2_val | icmd3_val | icmd1_4_7_val;
-    uint32_t result1 = Through32(type ^ 1,final);
-    return result1;
+    uint32_t final_itype_res = icmd6_val | icmd2_val | icmd3_val | icmd1_4_7_val;
+    //以上为 I 类指令的解码器
+    
+    return Through32(IS_ITYPE(type),final_itype_res);
 }
 
 static inline uint8_t getExFunc(uint8_t type,uint8_t icode,uint32_t data) {
@@ -118,11 +126,12 @@ static inline uint8_t getExFunc(uint8_t type,uint8_t icode,uint32_t data) {
       icode == ICODE_ALU ||
       icode == ICODE_MLMR 
     );
-    uint8_t val = Through8(cond,(data >> 16) & 0b1111);
+    uint8_t val = Through8(cond,(data >> 17) & 0b1111);
     cond = (ICODE_RET == icode);
-    uint8_t val2 = Through8(cond,(data >> 20) & 0b11111);
-
-    return Through8(type ^ 1,val | val2);
+    uint8_t val2 = Through8(cond,(data >> 21) & 0b1111);
+    uint8_t final_itype_val = val | val2;
+    //以上为 I 类指令的解码器
+    return Through8(IS_ITYPE(type),final_itype_val);
 }
 
 
@@ -149,25 +158,10 @@ void fetch_data(WOLF_CPU* cpu) {
     result.aluExFunc = getExFunc(type,icode,data);
     result.jmpExCond = getExCond(type,icode,data);
     result.ExFlag = getExFlag(type,icode,data);
-    
-    uint8_t invalid = (icode != ICODE_ALU 
-        && icode != ICODE_ECALL 
-        && icode != ICODE_ERET_EXFUNC 
-        && icode != ICODE_IRET_EXFUNC
-        && icode != ICODE_JMP
-        && icode != ICODE_LEBR
-        && icode != ICODE_LIBR
-        && icode != ICODE_LPGR
-        && icode != ICODE_LSCR
-        && icode != ICODE_MLMR
-        && icode != ICODE_MOV
-        && icode != ICODE_OCALL
-        && icode != ICODE_RET
-        && icode != ICODE_RSCR
-        && icode != ICODE_LIRE
-        && icode != ICODE_LERE); //电路中直接6-64然后对那些未使用的引脚做or就好
+
     result.noexception = 1;
-    if(Through8(result.irtype ^ 1,invalid)) {
+    if(Through8(result.irtype ^ 1,
+        (IS_ICODE_INVALID(icode,type)) )) {
         cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE); //调用 ecall 函数，代表出现问题
         result.noexception = 0;
     }

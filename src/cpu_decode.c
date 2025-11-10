@@ -12,6 +12,7 @@ uint32_t getiData(uint8_t icode,uint32_t idata,uint32_t excond) {
     uint32_t idata1 = Through32(code_valid,(idata & 0xff) << 8 | (idata >> 8));
     uint8_t code_valid2 = (icode == ICODE_ALU);
     uint32_t idata2 = Through32(code_valid2,(idata & 0xff) << 4 | (idata >> 8));
+    
     return Through32(code_valid,idata1) |
         Through32(code_valid2,idata2) |
         Through32(!code_valid && !code_valid2,idata);
@@ -29,7 +30,13 @@ void decode(WOLF_CPU* cpu) {
     if(!data.noexception) goto CPU_DECODE_END_STATUS;
     uint8_t reg1 = data.reg1;
     uint8_t reg2 = data.reg2;
-    
+    uint8_t destReg = getDestReg(data.icode,reg1,reg2);
+    if(destReg == CPU_REG_PC) {
+        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE);
+        res.noexception = 0;
+        goto CPU_DECODE_END_STATUS;
+    }//限制:destReg不能是PC
+
     uint32_t val1 = getRegVal(cpu,reg1);
     uint32_t val2 = getRegVal(cpu,reg2);
     res.ExCond = data.jmpExCond;
@@ -43,7 +50,7 @@ void decode(WOLF_CPU* cpu) {
     res.noexception = data.noexception; //上传
     if(!regValid(reg1) || !regValid(reg2)) {
         cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNRECOGNIZED_REG);
-        res.noexception = 0;    
+        res.noexception = 0;
     }
 CPU_DECODE_END_STATUS:
     cpu->id_data_reg = res;

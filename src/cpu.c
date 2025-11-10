@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <debug/debug_io.h>
 uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {

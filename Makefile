@@ -15,5 +15,6 @@ $(TARGET): $(OBJS)
 
 
 clean:
-	@rm *.o *\*.o *\*\*.o
-	rm $(TARGET) $(OBJS) src\**\*.o 2>NUL
+	rm *.o 
+	rm *\*.o 
+	rm *\*\*.o

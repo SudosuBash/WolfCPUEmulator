@@ -51,4 +51,7 @@
    (Through32((data)==0b1,0xff) | \
    Through32((data)==0b10,0xffff) | \
    Through32((data)==0b00,0xffffffff))
+
+#define DEBUG_ON 1
+
 #endif
