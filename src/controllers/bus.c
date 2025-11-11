@@ -22,6 +22,7 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
         return status;
     }
     bus_ctrl->data_cmd_collection.status = BUS_STATUS_SUCCESS;
+    status = bus_ctrl->data_cmd_collection.status;
     return status;
 }
 

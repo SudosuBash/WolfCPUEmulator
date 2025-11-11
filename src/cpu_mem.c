@@ -23,11 +23,20 @@ void memory(WOLF_CPU* cpu) {
     mem_res.noexception = res.noexception;
     mem_res.ExFlag = res.ExFlag;
     mem_res.ExFunc = res.ExFunc;
+
+    uint32_t wr_data = Through32((
+        icode == ICODE_OCALL ||
+        icode == ICODE_PUSH
+    ),res.valC);
+    uint32_t wr_addr = Through32((
+        icode == ICODE_OCALL ||
+        icode == ICODE_PUSH
+    ),res.valB);
     switch(res.icode) {
         case ICODE_RET: {
             if(res.ExFunc != 0) break; //确保普通的ret
             MMU_STATUS stat = controller->rd_mmu(&controller,res.valA,be);
-            if(stat.stat != 0) {
+            if(stat.stat != BCR_RAM_ERR_OK) {
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat));
                 res.noexception = 0;
                 goto CPU_MEM_END_STATUS;
@@ -36,10 +45,17 @@ void memory(WOLF_CPU* cpu) {
             //M[valC] <- valA;
             break;
         }
+        case ICODE_PUSH:
         case ICODE_OCALL: {
             MMU_DATA data = {0};
             data.be = finalBe;
-            controller->wr_mmu(&controller,res.valC,data);
+            data.data = wr_data;
+            MMU_STATUS stat = controller->wr_mmu(&cpu->mmu,wr_addr,data);
+            if(stat.stat != BCR_RAM_ERR_OK) {
+                cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat));
+                res.noexception = 0;
+                goto CPU_MEM_END_STATUS;
+            }
             break;            
         }
     }

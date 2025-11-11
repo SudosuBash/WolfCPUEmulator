@@ -140,7 +140,9 @@
         && (icode) != ICODE_LEPV \
         && (icode) != ICODE_LIPV \
         && (icode) != ICODE_ZWCB \
-        && (icode) != ICODE_ZWCW)  \
+        && (icode) != ICODE_ZWCW \
+        && (icode) != ICODE_PUSH \
+        && (icode) != ICODE_POP)  \
     || ((( \
         (icode) == ICODE_PUSH || \
         (icode) == ICODE_POP || \
@@ -155,7 +157,7 @@
         ((icode) == ICODE_ECALL) && \
         !IS_ITYPE(type) \
     ))
-    
+
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;

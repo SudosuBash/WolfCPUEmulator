@@ -1,10 +1,6 @@
 #include <cpu.h>
 
 
-uint8_t regValid(uint8_t reg1) {
-    return ! (reg1 > CPU_REG_IRQ_REASON);
-}
-
 uint32_t getiData(uint8_t icode,uint32_t idata,uint32_t excond) {
     uint8_t code_valid = (icode == ICODE_MOV ||
         (icode == ICODE_JMP) ||
@@ -19,9 +15,12 @@ uint32_t getiData(uint8_t icode,uint32_t idata,uint32_t excond) {
 }
 
 uint8_t getDestReg(uint8_t icode,uint8_t reg1,uint8_t reg2) {
-    uint8_t cond = (icode == ICODE_OCALL);
+    uint8_t cond = (icode == ICODE_OCALL || icode == ICODE_PUSH);
+    uint8_t cond2 = (icode == ICODE_JMP || 
+        icode == ICODE_POP); //不需要写入寄存器的指令
     return Through8(cond,reg2) |
-        Through8(!cond,reg1);
+        Through8(cond2,0) |
+        Through8(!cond && !cond2,reg1);
 }
 void decode(WOLF_CPU* cpu) {
     WCPUFetchData data = cpu->if_data_reg;
@@ -40,7 +39,7 @@ void decode(WOLF_CPU* cpu) {
     uint32_t val1 = getRegVal(cpu,reg1);
     uint32_t val2 = getRegVal(cpu,reg2);
     res.ExCond = data.jmpExCond;
-    res.destRegs = getDestReg(data.icode,reg1,reg2);
+    res.destRegs = destReg;
     res.icode = data.icode;
     res.ExFunc = data.aluExFunc;
     res.valA = val1;
@@ -48,10 +47,6 @@ void decode(WOLF_CPU* cpu) {
     res.valC = getiData(data.icode,data.idata,data.jmpExCond);
     res.ExFlag = data.ExFlag;
     res.noexception = data.noexception; //上传
-    if(!regValid(reg1) || !regValid(reg2)) {
-        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNRECOGNIZED_REG);
-        res.noexception = 0;
-    }
 CPU_DECODE_END_STATUS:
     cpu->id_data_reg = res;
 }

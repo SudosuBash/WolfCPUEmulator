@@ -78,7 +78,7 @@ void free_cpu(WOLF_CPU** cpu) {
 }
 
 uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
-    if(lreg != 0 && lreg < MAX_GEN_REGISTER_COUNT) {
+    if(lreg < MAX_GEN_REGISTER_COUNT) {
         return cpu->gen_regs.r[lreg];
     }
     switch(lreg) {

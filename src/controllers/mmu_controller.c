@@ -27,7 +27,7 @@ WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
         res.stat = BCR_RAM_ERR;
         if(res.stat != 0) return res;
     }
-    res.addr = paddr;
+    res.addr = paddr; 
     return res;
 }
 
@@ -45,9 +45,35 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 
     WOLF_CACHE_CONTROLLER* cache = cpu->cache_controller;
     if(paddr.addr < BASE_MMIO_ADDR) { //访问内存 
-        
+        RAM_WR_STATUS stat = cpu->mem_controller->wr_ram(&cpu->mem_controller,paddr.addr,data.data,data.be);
+        if(stat.dmem_error) {
+            res1.stat = BCR_RAM_ERR;
+            return res1;
+        }
+        RAM_RD_STATUS stat2 = cpu->mem_controller->rd_ram(&cpu->mem_controller,paddr.addr);
+        if(stat2.dmem_error) {
+            res1.stat = BCR_RAM_ERR;
+            return res1;
+        }
+        cache->ld_l2_cache(cpu->cache2,paddr.addr,stat2.data.offset);
+        uint32_t relaAddr = ((addr & L2_OFFSET_MASK) - (addr & (L1_OFFSET_MASK))) >> 2;
+        cache->ld_l1_cache(cpu->cache1,paddr.addr,(&stat2.data.offset[relaAddr]));
     } else if(paddr.addr < BASE_MMIO_ADDR) { //访问MMIO
-
+        WOLF_CPU_BUS_CONTROLLER* controller = cpu->bus;
+        BUS_SEND_DATA bits = {0};
+        bits.be = data.be;
+        bits.read_write = BUS_RW_WRITE;
+        uint8_t status = controller->send_data(&cpu->bus,paddr.addr,bits);
+        if(status == BUS_STATUS_ERROR) {
+            res1.stat = BCR_RAM_ERR;
+            return res1;
+        }
+        if(bits.status == BUS_STATUS_TIMEOUT) {
+            res1.stat = BCR_RAM_ERR_REG_TIMEOUT;
+            return res1;
+        }
+        res1.stat = BCR_RAM_ERR_OK;
+        return res1;
     } else if(paddr.addr < BASE_MMU_ADDR) { //访问MMU，简化逻辑不单独设计一个元件了
         uint32_t pos_addr = paddr.addr - BASE_MMU_ADDR;
         if(pos_addr >= MMU_CONTROLLER_REGS * sizeof(uint32_t)) {
@@ -79,7 +105,8 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 
 static const uint32_t bios_code[512 / 4] = {
     0x0228ff00,
-    0,
+    0x03c80080,
+    0x88200000,
     //0x40180006,
     0x4010a0a0
 };
@@ -128,6 +155,10 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
             res1.stat = BCR_RAM_ERR;
             return res1;
         }
+        if(bits.status == BUS_STATUS_TIMEOUT) {
+            res1.stat = BCR_RAM_ERR_REG_TIMEOUT;
+            return res1;
+        }
         res1.data = bits.data;
     } else if(paddr.addr < BASE_BIOS_ADDR) { //访问MMU控制器的设备获取部分
         uint32_t pos_addr = paddr.addr - BASE_MMU_ADDR;
@@ -146,10 +177,8 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
 
 WOLF_CPU_MMU_CONTROLLER* init_mmu_controller() {
     WOLF_CPU_MMU_CONTROLLER* mmu = (WOLF_CPU_MMU_CONTROLLER*) calloc(1,sizeof(WOLF_CPU_MMU_CONTROLLER));
-    
     mmu->wr_mmu = mmu_memory_wr_f;
     mmu->rd_mmu = mmu_memory_rd_f;
-
     return mmu;
 }
 

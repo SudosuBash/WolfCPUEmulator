@@ -33,14 +33,13 @@ void writeback(WOLF_CPU* cpu) {
             );
             break;
         }
-        case ICODE_RERE: {
+        //4个指令全部传送valB
+        case ICODE_RERE: 
+        case ICODE_RIRE:
+        case ICODE_ECALL:
+        case ICODE_OCALL:
             cpu->gen_regs.r[result.destReg] = result.valB;
             break;
-        }
-        case ICODE_RIRE: {
-            cpu->gen_regs.r[result.destReg] = result.valB;
-            break;
-        }
     }
     
     res.icode = result.icode;

@@ -9,6 +9,7 @@ void execute(WOLF_CPU* cpu) {
     res.noexception = data.noexception;
     res.valB = data.valB;
     res.valC = data.valC;
+    res.valA = data.valA;
     switch (icode) {
         case ICODE_ALU: {
             //用组合逻辑会导致条件为false时这段依然执行，很繁琐
@@ -58,8 +59,6 @@ void execute(WOLF_CPU* cpu) {
             break;
         }
         case ICODE_JMP: {
-            // uint8_t val = EXCOND_R1_ON(data.ExCond);
-            // data.valA = Through32(val,data.valA);
             res.valC = data.valA + data.valC;
             break;
         }
@@ -72,14 +71,13 @@ void execute(WOLF_CPU* cpu) {
             }
             break;
         }
-        case ICODE_ECALL: {
-            res.valB = data.valB - 4;
-            break;
-        }
-
         case ICODE_OCALL:
-            res.valB = data.valB - 4;
+            res.valB = data.valB - 4; //WB写回
             res.valC = data.valA + data.valC;
+            break;
+        case ICODE_PUSH:
+            res.valC = data.valA;
+            res.valB = data.valB - 4;  //WB写回
             break;
     }
     res.icode = data.icode;
@@ -87,7 +85,7 @@ void execute(WOLF_CPU* cpu) {
     res.destReg = data.destRegs;
     res.ExFunc = data.ExFunc;
     res.ExFlag = data.ExFlag;
-    res.valA = data.valA;
+
 CPU_EXEC_END_STATUS:
     cpu->ex_data_reg = res;
 }

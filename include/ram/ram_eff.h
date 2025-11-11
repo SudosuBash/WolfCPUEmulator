@@ -14,7 +14,7 @@
 
 #define RAM_PDE_ITEM (1 << RAM_PDE_BITS)
 #define RAM_PTE_ITEM (1 << RAM_PTE_BITS)
-#define RAM_SINGLE_BLK_SIZE (1 << RAM_OFFSET_BITS)
+#define RAM_SINGLE_BLK_SIZE (1 << (RAM_OFFSET_BITS+1))
 
 #define RAM_PTE_MASK (RAM_PTE_ITEM - 1)
 #define RAM_OFFSET_MASK (RAM_SINGLE_BLK_SIZE - 1)
@@ -27,7 +27,7 @@
 //512 MB
 typedef struct {
     uint8_t status_flag:1; //就一位，1代表内存超限
-    uint32_t data[L2_GROUP_SIZE / sizeof(uint32_t)];
+    uint32_t data[L2_SIZE / sizeof(uint32_t)];
 } RAM_OPERATOR_RESULT;
 
 typedef struct {

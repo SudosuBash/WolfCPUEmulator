@@ -23,7 +23,7 @@ RAM_RD_STATUS rd_memory(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr) {
 
     stat.dmem_error = result.status_flag & 1;
     if(!stat.dmem_error) {
-        memcpy(stat.data.offset,result.data,32);
+        memcpy(stat.data.offset,result.data,32 * sizeof(uint32_t));
     }
 
     return stat;
@@ -48,13 +48,14 @@ RAM_RD_STATUS rd_memory_4b(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8
     return stat;
 }
 
-RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value,uint32_t be) {
+RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value,uint8_t be) {
     RAM_WR_STATUS stat = {0};
 
     RAM_IN_ARGS input = {0};
     input.opcode = RAM_IN_OPCODE_WR;
     input.opbytes = RAM_IN_OPBYTES_4BYTE;
     input.paddr = paddr;
+    input.val4bIn = value;
 
     RAM_OPERATOR_RESULT result = (*controller)->ram_unit->operatorFunc(&(*controller)->ram_unit,input);
 
@@ -73,6 +74,7 @@ WOLF_MEM_CONTROLLER* init_mem_controller() {
     controller->ram_unit = unit;
     controller->rd_ram = rd_memory;
     controller->rd_ram_4b = rd_memory_4b;
+    controller->wr_ram = wr_mem;
     return controller;
 UNIT_ALLOC_FAIL: free(controller);
 MEM_ALLOC_FAIL:   return NULL;
