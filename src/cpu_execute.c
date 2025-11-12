@@ -79,10 +79,14 @@ void execute(WOLF_CPU* cpu) {
             res.valC = data.valA;
             res.valB = data.valB - 4;  //WB写回
             break;
+        case ICODE_POP:
+            res.valB = res.valB + 4;
+            break;
     }
     res.icode = data.icode;
     res.ExCond = data.ExCond;
-    res.destReg = data.destRegs;
+    res.destReg = data.destReg;
+    res.destReg2 = data.destReg2;
     res.ExFunc = data.ExFunc;
     res.ExFlag = data.ExFlag;
 

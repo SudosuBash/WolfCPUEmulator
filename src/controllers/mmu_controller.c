@@ -107,8 +107,9 @@ static const uint32_t bios_code[512 / 4] = {
     0x0228ff00,
     0x03c80080,
     0x88200000,
-    //0x40180006,
-    0x4010a0a0
+    0x8a400000,
+    // 0x4010a0a0,
+    0xe2200000
 };
 MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be) {
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);

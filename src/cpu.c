@@ -97,3 +97,27 @@ uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
     }
     
 }
+
+
+void write_reg_val(WOLF_CPU* cpu,uint8_t regnum,uint32_t value) {
+    if(regnum < 15) {
+        cpu->gen_regs.r[regnum] = value;
+    }
+    switch (regnum)
+    {
+    case CPU_REG_ECALL_ECBASE:
+        cpu->ecall_regs.mep = value;
+        break;
+    case CPU_REG_ECALL_ICBASE:
+        cpu->irq_regs.mep = value;
+        break;
+    case CPU_REG_SPE_BCR:
+        cpu->spe_regs.bcr = value & 0xff;
+        break;
+    case CPU_REG_SPE_PGBASE:
+        cpu->spe_regs.pg_mode_base_addr_reg = value;
+        break;
+    default:
+        break;
+    }
+}

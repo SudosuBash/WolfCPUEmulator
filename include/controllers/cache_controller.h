@@ -16,7 +16,6 @@
 
 typedef struct {
     uint8_t hit:1;
-    uint8_t addr_not_align:1;
     uint8_t reserved:2;
 } CACHE_RD_STAT;
 

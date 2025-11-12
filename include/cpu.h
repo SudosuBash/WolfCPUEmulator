@@ -14,7 +14,7 @@
 #include "alu.h"
 
 #define IS_IN_KERN_MODE(cpu) \
-        ((cpu)->spe_regs.bcr & KERN_MODE_MASK)
+        !((cpu)->spe_regs.bcr & KERN_MODE_MASK)
 
 #define IS_CACHE_ON(cpu) \
     ((cpu)->spe_regs.bcr & CACHE_OPEN_MASK) >> 1
@@ -71,7 +71,7 @@
 //SCR控制器
 #define ICODE_RSCR 0b110000
 //R类
-#define ICODE_LSCR 0b110001
+#define ICODE_LBCR 0b110001
 //分页模式基地址
 //R类
 
@@ -129,7 +129,7 @@
         && (icode) != ICODE_LEBR \
         && (icode) != ICODE_LIBR \
         && (icode) != ICODE_LPGR \
-        && (icode) != ICODE_LSCR \
+        && (icode) != ICODE_LBCR \
         && (icode) != ICODE_MLMR \
         && (icode) != ICODE_MOV \
         && (icode) != ICODE_OCALL \
@@ -161,8 +161,8 @@
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;
-    uint8_t reg1:4;
-    uint8_t reg2:4;
+    uint8_t reg1:5;
+    uint8_t reg2:5;
     uint16_t idata;
     uint8_t aluExFunc:3;
     uint8_t jmpExCond:4;
@@ -172,7 +172,8 @@ typedef struct {
 
 typedef struct {
     uint8_t icode;
-    uint8_t destReg;
+    uint8_t destReg:5;
+    uint8_t destReg2:5;
     uint32_t valC_Extended;//用于乘除法
     uint32_t valC;
     uint32_t valB;
@@ -189,6 +190,7 @@ typedef struct {
     uint32_t valA;
     uint8_t icode;
     uint8_t destReg;
+    uint8_t destReg2:5;
     uint8_t ExCond:3;
     uint8_t ExFunc:5;
     uint8_t ExFlag:5;
@@ -197,7 +199,8 @@ typedef struct {
 
 typedef struct {
     uint8_t icode;
-    uint8_t destRegs;
+    uint8_t destReg;
+    uint8_t destReg2:5;
     uint32_t valA;
     uint32_t valB;
     uint32_t valC;
@@ -251,6 +254,7 @@ void writeback(WOLF_CPU* cpu);
 void update_PC(WOLF_CPU* cpu);
 
 uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg);
+void write_reg_val(WOLF_CPU* cpu,uint8_t regnum,uint32_t value);
 
 void start_cpu(WOLF_CPU* cpu);
 WOLF_CPU* init_cpu();

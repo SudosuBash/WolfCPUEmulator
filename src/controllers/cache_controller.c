@@ -69,13 +69,9 @@
 L1_CACHE_RD_GROUP_RES rd_cache_l1_groups(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_SIZE],uint32_t addr) {
     L1_CACHE_RD_GROUP_RES stat = {0};
     uint8_t align = addr & 3;
-    stat.stat.addr_not_align = align != 0;
-    if (stat.stat.addr_not_align) {
-        return stat;
-    }//不对齐的可以返回了，直接触发异常
-    uint8_t offset = addr & (L2_OFFSET_MASK);
-    uint16_t cgroup = (addr >> L2_OFFSET) & L2_GROUP_MASK;
-    uint16_t tag = (addr >> L2_GROUP);
+    uint8_t offset = addr & (L1_OFFSET_MASK);
+    uint16_t cgroup = (addr >> L1_OFFSET) & L1_GROUP_MASK;
+    uint16_t tag = (addr >> L1_GROUP);
 
     MACHINE_L1_CACHE_GROUP* targetGroup = group[cgroup];
 
@@ -96,10 +92,6 @@ L1_CACHE_RD_GROUP_RES rd_cache_l1_groups(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_
 L2_CACHE_RD_GROUP_RES rd_cache_l2_groups(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE],uint32_t addr) {
     L2_CACHE_RD_GROUP_RES stat = {0};
     uint8_t align = addr & 3;
-    stat.stat.addr_not_align = align != 0;
-    if (stat.stat.addr_not_align) {
-        return stat;
-    }//不对齐的可以返回了，直接触发异常
     uint8_t offset = addr & (L2_OFFSET_MASK);
     uint16_t cgroup = (addr >> L2_OFFSET) & L2_GROUP_MASK;
     uint16_t tag = (addr >> L2_GROUP);
@@ -131,12 +123,14 @@ uint8_t ld_cache_l1(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_SIZE], uint32_t addr,
     uint8_t L1OffsetWritten = (!CACHE_VALID(cacheLn1->valid))
         || (CACHE_VALID(cacheLn1->valid) && CACHE_LATEST_USED(cacheLn1->valid));
     L1_CACHE_LINE_WRITE(L1OffsetWritten, cacheLn1, data); //写入缓存1
+    cacheLn1->tag = Mux32(L1OffsetWritten,cacheLn1->tag,tag);
     CHANGE_USED_STATUS(L1OffsetWritten, cacheLn1, cacheLn2);
 
     uint8_t L2OffsetWritten = (!CACHE_VALID(cacheLn2->valid) && CACHE_VALID(cacheLn1->valid)) || (
         CACHE_VALID(cacheLn2->valid) && CACHE_VALID(cacheLn1->valid) && CACHE_LATEST_USED(cacheLn2->valid)
     );
     L1_CACHE_LINE_WRITE(L2OffsetWritten, cacheLn2, data);
+    cacheLn1->tag = Mux32(L2OffsetWritten,cacheLn2->tag,tag);
     CHANGE_USED_STATUS(L2OffsetWritten, cacheLn2, cacheLn1);
     return 0;
 }
@@ -145,8 +139,8 @@ uint8_t ld_cache_l1(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_SIZE], uint32_t addr,
 
 uint8_t ld_cache_l2(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE], uint32_t addr, uint32_t data[CACHE_ARR_SIZE(L2_SIZE, uint32_t)]) {
     uint8_t offset = addr & (L2_OFFSET_MASK);
-    uint16_t cgroup = (addr >> L2_OFFSET) & L1_GROUP_MASK;
-    uint16_t tag = (addr >> L1_GROUP);
+    uint16_t cgroup = (addr >> L2_OFFSET) & L2_GROUP_MASK;
+    uint16_t tag = (addr >> L2_GROUP);
 
     MACHINE_L2_CACHE_GROUP* targetGroup = group[cgroup];
     MACHINE_L2_CACHE_LINE* cacheLn1 = targetGroup->cache_lines_1;
@@ -155,12 +149,14 @@ uint8_t ld_cache_l2(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE], uint32_t addr,
     uint8_t L1OffsetWritten = (!CACHE_VALID(cacheLn1->valid))
         || (CACHE_VALID(cacheLn1->valid) && CACHE_LATEST_USED(cacheLn1->valid));
     L2_CACHE_MEM_LINE_WRITE(L1OffsetWritten, cacheLn1, data); //写入缓存1
+    cacheLn1->tag = Mux32(L1OffsetWritten,cacheLn2->tag,tag);
     CHANGE_USED_STATUS(L1OffsetWritten, cacheLn1, cacheLn2);
 
     uint8_t L2OffsetWritten = (!CACHE_VALID(cacheLn2->valid) && CACHE_VALID(cacheLn1->valid)) || (
         CACHE_VALID(cacheLn2->valid) && CACHE_VALID(cacheLn1->valid) && CACHE_LATEST_USED(cacheLn2->valid)
     );
     L2_CACHE_MEM_LINE_WRITE(L2OffsetWritten, cacheLn2, data);
+    cacheLn1->tag = Mux32(L2OffsetWritten,cacheLn2->tag,tag);
     CHANGE_USED_STATUS(L2OffsetWritten, cacheLn2, cacheLn1);
     return 0;
 }

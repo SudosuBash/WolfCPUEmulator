@@ -16,8 +16,7 @@ uint32_t getiData(uint8_t icode,uint32_t idata,uint32_t excond) {
 
 uint8_t getDestReg(uint8_t icode,uint8_t reg1,uint8_t reg2) {
     uint8_t cond = (icode == ICODE_OCALL || icode == ICODE_PUSH);
-    uint8_t cond2 = (icode == ICODE_JMP || 
-        icode == ICODE_POP); //不需要写入寄存器的指令
+    uint8_t cond2 = (icode == ICODE_JMP); //不需要写入寄存器的指令
     return Through8(cond,reg2) |
         Through8(cond2,0) |
         Through8(!cond && !cond2,reg1);
@@ -35,11 +34,12 @@ void decode(WOLF_CPU* cpu) {
         res.noexception = 0;
         goto CPU_DECODE_END_STATUS;
     }//限制:destReg不能是PC
-
+    uint8_t destReg2 = Through8(data.icode == ICODE_POP,reg2);
     uint32_t val1 = getRegVal(cpu,reg1);
     uint32_t val2 = getRegVal(cpu,reg2);
     res.ExCond = data.jmpExCond;
-    res.destRegs = destReg;
+    res.destReg = destReg;
+    res.destReg2 = destReg2;
     res.icode = data.icode;
     res.ExFunc = data.aluExFunc;
     res.valA = val1;

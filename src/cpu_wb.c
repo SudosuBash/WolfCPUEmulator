@@ -13,32 +13,44 @@ void writeback(WOLF_CPU* cpu) {
         
     }
     uint8_t icode = result.icode;
-    uint8_t cond = (icode == ICODE_MOV);
     
-    switch(cond) {
+    switch(icode) {
         case ICODE_MOV: {
             uint32_t mask = BE_MASK_GEN(result.ExFlag >> 2);
-            cpu->gen_regs.r[result.destReg] = get_reg_data(
+            write_reg_val(cpu,result.destReg, get_reg_data(
                 cpu->gen_regs.r[result.destReg],
                 mask,
                 result.valC
-            );
+            ));
             break;
         }
         case ICODE_ALU: {
-            cpu->gen_regs.r[result.destReg] = get_reg_data(
+            write_reg_val(cpu,result.destReg,get_reg_data(
                 cpu->gen_regs.r[result.destReg],
                 0b1111,
                 result.valC
-            );
+            ));
             break;
         }
+        case ICODE_LEBR:
+        case ICODE_LEPV:
+        case ICODE_LIBR:
+        case ICODE_LIPV:
+        case ICODE_LPGR:
+        case ICODE_LBCR:
+            write_reg_val(cpu,result.destReg, result.valB);
+            break;
         //4个指令全部传送valB
         case ICODE_RERE: 
         case ICODE_RIRE:
         case ICODE_ECALL:
         case ICODE_OCALL:
+        case ICODE_PUSH:
             cpu->gen_regs.r[result.destReg] = result.valB;
+            break;
+        case ICODE_POP:
+            cpu->gen_regs.r[result.destReg2] = result.valB;
+            cpu->gen_regs.r[result.destReg] = result.valC;
             break;
     }
     
