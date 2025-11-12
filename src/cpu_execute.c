@@ -1,5 +1,10 @@
 #include <cpu.h>
 
+#define ZWC_16(data) ( (Through32(((data) & 0x00000080) >> 7,(data) | 0xffffff00) |\
+                Through32(!(((data) & 0x0000080) >> 7), res.valA & 0x000000ff)) )
+#define ZWC_32(data) ( (Through32(((data) & 0x00008000) >> 15,(data) | 0xffff0000) |\
+                Through32(!(((data) & 0x0008000) >> 15), (data) & 0x0000ffff)) )
+                               
 void execute(WOLF_CPU* cpu) {
     WCPUDecodedData data = cpu->id_data_reg;
     uint8_t icode = data.icode;
@@ -63,11 +68,10 @@ void execute(WOLF_CPU* cpu) {
             break;
         }
         case ICODE_RET: {
-            uint8_t flag = data.ExFlag;
-            switch(flag) {
+            uint8_t func= data.ExFunc;
+            switch(func) {
                 case ICODE_RET_EXFUNC:
                     res.valB = data.valB + 4;
-                    break;
             }
             break;
         }
@@ -82,6 +86,14 @@ void execute(WOLF_CPU* cpu) {
         case ICODE_POP:
             res.valB = res.valB + 4;
             break;
+        case ICODE_ZWC: {
+            uint32_t targetVal = Through32(data.ExFlag & 1, ZWC_16(res.valA)) |
+                Through32(!data.ExFlag & 1,ZWC_32(res.valA));
+            res.valB = targetVal;
+            break;
+        }
+            
+
     }
     res.icode = data.icode;
     res.ExCond = data.ExCond;

@@ -1,6 +1,5 @@
 #include <cpu.h>
 
-
 uint32_t getiData(uint8_t icode,uint32_t idata,uint32_t excond) {
     uint8_t code_valid = (icode == ICODE_MOV ||
         (icode == ICODE_JMP) ||

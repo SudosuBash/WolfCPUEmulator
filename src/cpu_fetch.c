@@ -57,20 +57,20 @@ static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
     uint8_t movExFlag = (data >> 16) & 0b11111;
     uint8_t val1 = Through8(cond,movExFlag);
     
-    cond = icode == ICODE_ALU || ICODE_MLMR;
-    uint8_t val2 = Through8(cond,(icode >> 12) & 0b11111);
+    cond = (icode == ICODE_ALU || cond == ICODE_MLMR);
+    uint8_t val2 = Through8(cond,(data >> 12) & 0b11111);
     uint8_t final_itype_val =val1 | val2;
     //以上为 I 类指令的解码器
 
-    cond = icode == ICODE_OCALL;
-    uint8_t val3 = Through8(cond,(icode >> 16) & 0b11111);
-    uint8_t final_rtype_val = Through8(IS_RTYPE(type),val3);
+    cond = icode == ICODE_OCALL || ICODE_ZWC;
+    uint8_t val3 = Through8(cond,(data >> 16) & 0b11111);
+    uint8_t final_rtype_val = val3;
     //以上为 R 类指令的解码器
     return Through8(IS_ITYPE(type), final_itype_val) |
         Through8(IS_RTYPE(type),final_rtype_val);
 }
 
-static inline uint8_t getLRegisterA(uint8_t type,uint8_t icode,uint32_t data) {
+static inline uint8_t getLRegisterA(uint8_t icode,uint32_t data,uint8_t ExFlag,uint8_t ExCond) {
     uint8_t icodeA = 
       (icode == ICODE_MOV) ||
       (icode == ICODE_ALU) || 
@@ -78,8 +78,7 @@ static inline uint8_t getLRegisterA(uint8_t type,uint8_t icode,uint32_t data) {
       (icode == ICODE_RSCR) ||
       (icode == ICODE_RIRE) ||
       (icode == ICODE_RERE) ||
-      (icode == ICODE_ZWCB) ||
-      (icode == ICODE_ZWCW) ||
+      (icode == ICODE_ZWC) ||
       (icode == ICODE_PUSH) ||
       (icode == ICODE_POP);
     uint8_t regA = (data >> 21) & 0xf;
@@ -90,13 +89,13 @@ static inline uint8_t getLRegisterA(uint8_t type,uint8_t icode,uint32_t data) {
 
     uint8_t icodeC = 
         (icode == ICODE_OCALL);
-    uint8_t r1_on = EXFLAG_R1_ON(getExFlag(type,icode,data));
+    uint8_t r1_on = EXFLAG_R1_ON(ExFlag);
     uint8_t regC = Through8(r1_on,regA) |
         Through8(!r1_on,CPU_REG_PC);
     //CALL A设定为具体的值，B设定为RSP
 
     uint8_t icodeD = (icode == ICODE_JMP);
-    r1_on = EXCOND_R1_ON(getExCond(type,icode,data));
+    r1_on = EXCOND_R1_ON(ExCond);
     uint8_t regD = Through8(r1_on,regA) |
          Through8(!r1_on,CPU_REG_PC);
     //JMP A设置为具体的值
@@ -166,19 +165,21 @@ void fetch_data(WOLF_CPU* cpu) {
         result.noexception = 0;
         goto WCPU_FETCH_DATA_END;
     }
+
     uint32_t fetch = mmu_res.data;
     uint8_t type = fetch >> 31;
     uint8_t icode = (fetch >> 25) & 0b0111111;
     uint32_t data = fetch & 0x01ffffff;
-
-    result.irtype = type;
-    result.icode = icode;
-    result.reg1 = getLRegisterA(type,icode, data);
-    result.reg2 = getLRegisterB(type,icode,data);
-    result.idata = getIData(type, icode, data);
+    uint8_t ExFlag = getExFlag(type,icode,data);
     result.aluExFunc = getExFunc(type,icode,data);
     result.jmpExCond = getExCond(type,icode,data);
-    result.ExFlag = getExFlag(type,icode,data);
+    result.ExFlag = ExFlag;
+    result.irtype = type;
+    result.icode = icode;
+    result.reg1 = getLRegisterA(icode, data, ExFlag, result.jmpExCond);
+    result.reg2 = getLRegisterB(type,icode,data);
+    result.idata = getIData(type, icode, data);
+
 
     result.noexception = 1;
     if(IS_ICODE_INVALID(icode,type)) {

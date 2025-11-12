@@ -16,7 +16,7 @@ void writeback(WOLF_CPU* cpu) {
     
     switch(icode) {
         case ICODE_MOV: {
-            uint32_t mask = BE_MASK_GEN(result.ExFlag >> 2);
+            uint32_t mask = BE_MASK_GEN(result.ExFlag >> 3);
             write_reg_val(cpu,result.destReg, get_reg_data(
                 cpu->gen_regs.r[result.destReg],
                 mask,
@@ -46,6 +46,7 @@ void writeback(WOLF_CPU* cpu) {
         case ICODE_ECALL:
         case ICODE_OCALL:
         case ICODE_PUSH:
+        case ICODE_ZWC:
             cpu->gen_regs.r[result.destReg] = result.valB;
             break;
         case ICODE_POP:
@@ -57,6 +58,7 @@ void writeback(WOLF_CPU* cpu) {
     res.icode = result.icode;
     res.valC = result.valC;
     res.noexception = result.noexception;
+    res.ExFunc = result.ExFunc;
 WB_ERR_END:
     cpu->wb_result_reg = res;
 }

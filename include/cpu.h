@@ -50,11 +50,8 @@
 #define ICODE_POP 0b000101
 //R类
 
-#define ICODE_ZWCB 0b000100
+#define ICODE_ZWC 0b000110
 //R类
-#define ICODE_ZWCW 0b000101
-//R类
-
 #define ICODE_JMP 0b100000
 #define ICODE_OCALL 0b100011
 
@@ -125,7 +122,7 @@
 #define IS_ICODE_INVALID(icode,type) \
     (((icode) != ICODE_ALU \
         && (icode) != ICODE_ECALL \
-        && (icode) != ICODE_JMP \ 
+        && (icode) != ICODE_JMP \
         && (icode) != ICODE_LEBR \
         && (icode) != ICODE_LIBR \
         && (icode) != ICODE_LPGR \
@@ -139,15 +136,13 @@
         && (icode) != ICODE_RERE \
         && (icode) != ICODE_LEPV \
         && (icode) != ICODE_LIPV \
-        && (icode) != ICODE_ZWCB \
-        && (icode) != ICODE_ZWCW \
+        && (icode) != ICODE_ZWC \
         && (icode) != ICODE_PUSH \
         && (icode) != ICODE_POP)  \
     || ((( \
         (icode) == ICODE_PUSH || \
         (icode) == ICODE_POP || \
-        (icode) == ICODE_ZWCB || \
-        (icode) == ICODE_ZWCW || \
+        (icode) == ICODE_ZWC || \
         (icode) == ICODE_RET || \
         (icode) == ICODE_RIRE || \
         (icode) == ICODE_RERE || \
@@ -214,6 +209,7 @@ typedef struct {
     uint8_t icode;
     uint32_t valC;
     uint8_t noexception:1;
+    uint8_t ExFunc;
 } WCPUWBResult;
 
 typedef struct {
@@ -252,6 +248,7 @@ void memory(WOLF_CPU* cpu);
 void decode(WOLF_CPU* cpu);
 void writeback(WOLF_CPU* cpu);
 void update_PC(WOLF_CPU* cpu);
+void ecall_proc(WOLF_CPU* cpu);
 
 uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg);
 void write_reg_val(WOLF_CPU* cpu,uint8_t regnum,uint32_t value);

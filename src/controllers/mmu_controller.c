@@ -104,9 +104,10 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 }
 
 static const uint32_t bios_code[512 / 4] = {
-    0x0228ff00,
-    0x03c80080,
+    0x0220ffff,
+    0x03c00080,
     0x88200000,
+    0x8c210000,
     0x8a400000,
     // 0x4010a0a0,
     0xe2200000
