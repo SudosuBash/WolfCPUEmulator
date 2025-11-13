@@ -3,17 +3,19 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <debug/debug_io.h>
+#include <mmio_devices/device_init.h>
 uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
         pthread_mutex_lock(&cpu->clock_execution);
-        fetch_data(cpu); 
+        fetch_data(cpu);
         access_check(cpu);
         decode(cpu);
         execute(cpu);
         memory(cpu);
         writeback(cpu);
         update_PC(cpu);
+        ecall_proc(cpu);
         clk += 1;
         pthread_mutex_unlock(&cpu->clock_execution);
     }
@@ -21,7 +23,9 @@ void start_cpu(WOLF_CPU *cpu) {
 
 void init_env() {
     WOLF_CPU* cpu = init_cpu();
+    init_devices(cpu->bus);
     start_cpu(cpu);
+
     free_cpu(&cpu);
 }
 

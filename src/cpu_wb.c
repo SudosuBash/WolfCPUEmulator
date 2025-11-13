@@ -16,6 +16,9 @@ void writeback(WOLF_CPU* cpu) {
     
     switch(icode) {
         case ICODE_MOV: {
+            if(IS_RTYPE(result.irtype) && ICODE_EXFLAG_MOV_MEM1(result.ExFlag)) {
+                break;
+            }
             uint32_t mask = BE_MASK_GEN(result.ExFlag >> 3);
             write_reg_val(cpu,result.destReg, get_reg_data(
                 cpu->gen_regs.r[result.destReg],
@@ -59,6 +62,7 @@ void writeback(WOLF_CPU* cpu) {
     res.valC = result.valC;
     res.noexception = result.noexception;
     res.ExFunc = result.ExFunc;
+    res.irtype = result.irtype;
 WB_ERR_END:
     cpu->wb_result_reg = res;
 }

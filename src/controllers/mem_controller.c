@@ -43,8 +43,6 @@ RAM_RD_STATUS rd_memory_4b(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8
     if(!stat.dmem_error) {
         memcpy(stat.data.offset,result.data,BE_DATA(be));
     }
-
-
     return stat;
 }
 

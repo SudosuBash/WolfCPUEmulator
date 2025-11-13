@@ -67,3 +67,8 @@ void free_bus(WOLF_CPU_BUS_CONTROLLER** bus) {
         *bus = NULL;
     }
 }
+
+void register_device(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl,WOLF_CPU_BUS_DEVICE* device,uint8_t device_position) {
+    PWOLF_CPU_BUS_CONTROLLER controller = *bus_ctrl;
+    controller->devices[device_position] = device;
+}

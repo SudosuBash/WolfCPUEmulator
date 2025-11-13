@@ -25,6 +25,7 @@
 #define BASE_MMU_ADDR 0xfffffd00
 #define BASE_BIOS_ADDR 0xfffffe00
 //BIOS 512 B
+
 #define CPU_REG_PC 15
 #define CPU_REG_SPE_BCR 0b10000
 #define CPU_REG_SPE_SCR 0b10001
@@ -40,7 +41,7 @@
 //中断发生原因寄存器
 #define CPU_REG_RSP 14
 
-
+#define ICODE_NOP 0b000000
 #define ICODE_MOV 0b000001
 #define ICODE_ALU 0b000010
 #define ICODE_MLMR 0b000011
@@ -109,6 +110,7 @@
 #define ALU_EXFUNC_NEG_MASK 0b1
 #define ALU_EXFUNC_SGN_MASK 0b10
 
+#define GET_MLMR_EXFUNC_ALU(exfunc) ((exfunc) >> 4) & 1
 #define ALU_EXFUNC_MLMR_MASK 0x1
 #define ALU_EXFUNC_ML 0x0
 #define ALU_EXFUNC_MR 0x1
@@ -138,7 +140,8 @@
         && (icode) != ICODE_LIPV \
         && (icode) != ICODE_ZWC \
         && (icode) != ICODE_PUSH \
-        && (icode) != ICODE_POP)  \
+        && (icode) != ICODE_POP  \
+        && (icode) != ICODE_NOP) \
     || ((( \
         (icode) == ICODE_PUSH || \
         (icode) == ICODE_POP || \
@@ -146,12 +149,16 @@
         (icode) == ICODE_RET || \
         (icode) == ICODE_RIRE || \
         (icode) == ICODE_RERE || \
+        (icode) == ICODE_NOP || \
         IS_PRIVILEGE_INSTRUCTION(icode) \
         ) && !IS_RTYPE(type)) \
     ) || ( \
         ((icode) == ICODE_ECALL) && \
         !IS_ITYPE(type) \
     ))
+
+#define ICODE_EXFLAG_MOV_MEM1(exflag) ((exflag) >> 1) & 1
+#define ICODE_EXFLAG_MOV_MEM2(exflag) ((exflag) & 1)
 
 typedef struct {
     uint8_t irtype:1;
@@ -166,6 +173,7 @@ typedef struct {
 } WCPUFetchData;
 
 typedef struct {
+    uint8_t irtype:1;
     uint8_t icode;
     uint8_t destReg:5;
     uint8_t destReg2:5;
@@ -179,6 +187,7 @@ typedef struct {
 } WCPUMemResult;
 
 typedef struct {
+    uint8_t irtype:1;
     uint32_t valC;
     uint32_t valC_Extended;//用于乘除法
     uint32_t valB;
@@ -193,6 +202,7 @@ typedef struct {
 }WCPUExecuteResult;
 
 typedef struct {
+    uint8_t irtype:1;
     uint8_t icode;
     uint8_t destReg;
     uint8_t destReg2:5;
@@ -206,6 +216,7 @@ typedef struct {
 } WCPUDecodedData;
 
 typedef struct {
+    uint8_t irtype:1;
     uint8_t icode;
     uint32_t valC;
     uint8_t noexception:1;

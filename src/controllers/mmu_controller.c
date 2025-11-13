@@ -4,7 +4,6 @@ typedef struct {
     uint32_t addr;
     uint8_t stat:4;
     uint8_t cache_open:1;
-
 } WOLF_PADDR_GET;
 
 WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
@@ -58,7 +57,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         cache->ld_l2_cache(cpu->cache2,paddr.addr,stat2.data.offset);
         uint32_t relaAddr = ((addr & L2_OFFSET_MASK) - (addr & (L1_OFFSET_MASK))) >> 2;
         cache->ld_l1_cache(cpu->cache1,paddr.addr,(&stat2.data.offset[relaAddr]));
-    } else if(paddr.addr < BASE_MMIO_ADDR) { //访问MMIO
+    } else if(paddr.addr < BASE_MMU_ADDR) { //访问MMIO
         WOLF_CPU_BUS_CONTROLLER* controller = cpu->bus;
         BUS_SEND_DATA bits = {0};
         bits.be = data.be;
@@ -74,7 +73,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         }
         res1.stat = BCR_RAM_ERR_OK;
         return res1;
-    } else if(paddr.addr < BASE_MMU_ADDR) { //访问MMU，简化逻辑不单独设计一个元件了
+    } else if(paddr.addr < BASE_BIOS_ADDR) { //访问MMU，简化逻辑不单独设计一个元件了
         uint32_t pos_addr = paddr.addr - BASE_MMU_ADDR;
         if(pos_addr >= MMU_CONTROLLER_REGS * sizeof(uint32_t)) {
             res1.stat = BCR_RAM_ERR_REG_OUT_OF_RANGE;
@@ -82,6 +81,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         }
         controller->regs[pos_addr] = data.data;
         
+        uint32_t cmd = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_CMD];
         uint32_t device_num = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA];
         if(device_num > MAX_BUS_DEVICE) return res1;
         //简化逻辑就不增加对外接口了，真实电路应该加在Bus加一个对外访问函数用于模拟对外接口
@@ -90,13 +90,24 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         //此寄存器只读，CPU对这个寄存器的写入操作不会触发异常，但是结果无效,NEED_SPACE同此
         controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_NEED_SPACE_REGA] = cpu->bus->devices[device_num]->need_space;
         //更新设备的总线位置，读取对应的need_space
-        if(controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_BUFFER_REGA] >= BASE_MMIO_ADDR
-        && controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_BUFFER_REGA] < BASE_MMU_ADDR) {
-            cpu->bus->devices[device_num]->base_address = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_BUFFER_REGA];
+        switch(cmd) {
+            case MMU_CONTROLLER_CMD_SET_BASE_ADDR: { //设置基地址
+                if(controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] >= BASE_MMIO_ADDR
+                && controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] < BASE_MMU_ADDR) {
+                    cpu->bus->devices[device_num]->base_address = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA];
+                }
+                break;
+            }
+            case MMU_CONTROLLER_CMD_SET_IRQNUM: { //设置中断号
+                cpu->bus->devices[device_num]->irq_number = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] & 0xff;
+                //0~63位
+                break;
+            }
         }
+        controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] = 0; 
         //更新base_address
         //一次设备枚举包含两个阶段，一个是更新设备总线位置，一个是更新设备的bar
-        controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_BUFFER_REGA] = 0; 
+
     } else { //尝试读写BIOS，直接ACCESS DENIED
         res1.stat = BCR_RAM_ERR_ACCESS_DENIED;
     }
@@ -104,8 +115,10 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
 }
 
 static const uint32_t bios_code[512 / 4] = {
-    0x0220ffff,
+    0x0220f0ff,
+    0x82221000,
     0x03c00080,
+
     0x88200000,
     0x8c210000,
     0x8a400000,

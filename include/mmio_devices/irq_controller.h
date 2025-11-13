@@ -29,7 +29,7 @@
 #define IRQ_CONTROLLER_DEVICE_REGS 5
 #define BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR 0xF0000200
 #define IRQ_MAX_PRIO 3
-#define IRQ_INTERRUPTS_SUM 48
+#define IRQ_INTERRUPTS_SUM 64
 #define IRQ_INT_IN_CPU 0x1
 
 #define IRQ_IGNORED 0x1
@@ -60,7 +60,7 @@ struct WOLF_IRQ_CONTROLLER {
     pthread_mutex_t device_rwlock;
     
     irq_trigger_fn trigger_fn;    //预留一个硬件接口,对中断作请求
-    INTERRUPT_DESC registered_interrupts[IRQ_INTERRUPTS_SUM]; //48个
+    INTERRUPT_DESC registered_interrupts[IRQ_INTERRUPTS_SUM]; //64个
     uint64_t int_valid_flag;
 };
 

@@ -40,12 +40,16 @@ static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
         
     uint8_t icodeJ = (icode == ICODE_ECALL);
     uint8_t regB10 = CPU_REG_PC;
+    
+    uint8_t icodeK = (icode == ICODE_MOV);
+    uint8_t regB11 = (data >> 17) & 0xf;
     uint8_t final_rtype_val = 
         Through8(icodeA,regA) |
         Through8(icodeC,regB3) |
         Through8(icodeH,regB8) |
         Through8(icodeI,regB9) |
-        Through8(icodeJ,regB10);
+        Through8(icodeJ,regB10) |
+        Through8(icodeK,regB11);
     //以上为 R 类指令的解码器
     return Through8(IS_ITYPE(type), final_itype_val) |
         Through8(IS_RTYPE(type),final_rtype_val);
@@ -61,10 +65,14 @@ static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
     uint8_t val2 = Through8(cond,(data >> 12) & 0b11111);
     uint8_t final_itype_val =val1 | val2;
     //以上为 I 类指令的解码器
-
-    cond = icode == ICODE_OCALL || ICODE_ZWC;
+    cond = (icode == ICODE_OCALL) || (icode == ICODE_ZWC);
     uint8_t val3 = Through8(cond,(data >> 16) & 0b11111);
-    uint8_t final_rtype_val = val3;
+    cond = (
+        icode == ICODE_MOV
+    );
+    uint8_t val4 = Through8(cond,(data >> 12) & 0b11111);
+
+    uint8_t final_rtype_val = val3 | val4;
     //以上为 R 类指令的解码器
     return Through8(IS_ITYPE(type), final_itype_val) |
         Through8(IS_RTYPE(type),final_rtype_val);

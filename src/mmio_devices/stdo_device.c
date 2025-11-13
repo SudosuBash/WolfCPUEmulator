@@ -9,7 +9,6 @@
 #include <string.h>
 #include <controllers/bus.h>
 
-static WOLF_MMIO_STDO_DEVICE* stdo_device;
 static void write_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,BUS_SEND_DATA data) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE, bus_device);
@@ -79,7 +78,7 @@ static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
 //只能调用一次
 WOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
     WOLF_CPU_BUS_DEVICE* bus_device = (WOLF_CPU_BUS_DEVICE*)calloc(1,sizeof(WOLF_CPU_BUS_DEVICE));
-    stdo_device = (WOLF_MMIO_STDO_DEVICE*)calloc(1,sizeof(WOLF_MMIO_STDO_DEVICE));
+    WOLF_MMIO_STDO_DEVICE* stdo_device = (WOLF_MMIO_STDO_DEVICE*)calloc(1,sizeof(WOLF_MMIO_STDO_DEVICE));
 
     if(stdo_device == NULL || bus_device == NULL)
         return NULL; 
@@ -100,7 +99,7 @@ WOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
     return bus_device;
 }
 //只能调用一次
-void destroy_stdo_device() { //设备结束运行时候调用的
+void destroy_stdo_device(WOLF_MMIO_STDO_DEVICE* stdo_device) { //设备结束运行时候调用的
     pthread_rwlock_destroy(&(stdo_device->device_rwlock));
     if(stdo_device != NULL) {
         if (stdo_device->bus_device != NULL) {

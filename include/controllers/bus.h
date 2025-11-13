@@ -27,7 +27,6 @@ typedef struct {
 typedef struct WOLF_CPU_BUS_DEVICE WOLF_CPU_BUS_DEVICE,*PWOLF_CPU_BUS_DEVICE;
 typedef struct WOLF_CPU_BUS_CONTROLLER WOLF_CPU_BUS_CONTROLLER,*PWOLF_CPU_BUS_CONTROLLER;
 
-typedef void (*bus_reg_device_fn)(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl);
 typedef uint8_t (*bus_send_data_fn)(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA data);
 typedef BUS_SEND_DATA (*bus_recv_data_fn)(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl, uint32_t addr,BUS_SEND_DATA bits);
 
@@ -43,9 +42,6 @@ struct WOLF_CPU_BUS_CONTROLLER {
     WOLF_CPU_BUS_DEVICE* devices[MAX_BUS_DEVICE];
     bus_send_data_fn send_data;
     bus_recv_data_fn recv_data;
-
-    //以下是模拟硬件连接到总线的功能，真实的硬件不存在这个函数，初始化的时候搞定它
-    bus_reg_device_fn register_devices;
 };
 
 struct WOLF_CPU_BUS_DEVICE {
@@ -59,6 +55,9 @@ struct WOLF_CPU_BUS_DEVICE {
     uint32_t irq_number; //传递中断号
     uint8_t device_busy:2;
 
+    pthread_t thread;
+    pthread_attr_t thread_attr;
+
     device_start_fn start_func; 
     device_write_reg_fn wr_reg_func;
     device_read_reg_fn rd_reg_func;
@@ -69,4 +68,5 @@ struct WOLF_CPU_BUS_DEVICE {
 
 WOLF_CPU_BUS_CONTROLLER* init_bus();
 void free_bus(WOLF_CPU_BUS_CONTROLLER** bus);
+void register_device(PWOLF_CPU_BUS_CONTROLLER* bus_ctrl,WOLF_CPU_BUS_DEVICE* device,uint8_t device_position);
 #endif

@@ -24,10 +24,8 @@ typedef struct {
     WOLF_CPU_BUS_DEVICE* bus_device;
     uint8_t regs[STDO_DEVICE_REGS];
     pthread_rwlock_t device_rwlock;
-
-    
 } WOLF_MMIO_STDO_DEVICE;
 
 WOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller);
-void destroy_stdo_device();
+void destroy_stdo_device(WOLF_MMIO_STDO_DEVICE* stdo_device);
 #endif

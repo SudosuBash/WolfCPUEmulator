@@ -16,6 +16,18 @@ void execute(WOLF_CPU* cpu) {
     res.valC = data.valC;
     res.valA = data.valA;
     switch (icode) {
+        case ICODE_MOV: {
+            uint8_t i1_mem = ICODE_EXFLAG_MOV_MEM1(data.ExFlag);
+            uint8_t i2_mem = ICODE_EXFLAG_MOV_MEM1(data.ExFlag);
+            if(i1_mem && i2_mem && IS_RTYPE(data.irtype)) {
+                cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE);
+                goto CPU_EXEC_END_STATUS;
+            }
+            uint32_t f_val = Through32(i1_mem,res.valA) | Through32(i2_mem || (!i1_mem && !i2_mem),res.valB);
+            res.valC = Through32(IS_RTYPE(data.irtype),f_val) |
+                Through32(IS_ITYPE(data.irtype),res.valC);
+            break;
+        }
         case ICODE_ALU: {
             //用组合逻辑会导致条件为false时这段依然执行，很繁琐
             uint8_t sgn = data.ExFlag & ALU_EXFUNC_SGN_MASK;
@@ -50,14 +62,15 @@ void execute(WOLF_CPU* cpu) {
         }
         case ICODE_MLMR: {
             uint8_t ml_mr = data.ExFlag & ALU_EXFUNC_MLMR_MASK;
+            uint8_t is_alu = GET_MLMR_EXFUNC_ALU(data.ExFlag);
             uint32_t res1 = 0;
             switch (ml_mr)
             {
             case ALU_EXFUNC_ML:
-                res1 = cpu->alu->ml_operate(&cpu->alu,data.valA,data.valB);
+                res1 = cpu->alu->ml_operate(&cpu->alu,data.valA,data.valB,is_alu);
                 break;
             case ALU_EXFUNC_MR:
-                res1 = cpu->alu->mr_operate(&cpu->alu,data.valA,data.valB);
+                res1 = cpu->alu->mr_operate(&cpu->alu,data.valA,data.valB,is_alu);
                 break;
             }
             res.valC = res1;
@@ -101,7 +114,7 @@ void execute(WOLF_CPU* cpu) {
     res.destReg2 = data.destReg2;
     res.ExFunc = data.ExFunc;
     res.ExFlag = data.ExFlag;
-
+    res.irtype = data.irtype;
 CPU_EXEC_END_STATUS:
     cpu->ex_data_reg = res;
 }

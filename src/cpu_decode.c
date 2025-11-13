@@ -36,6 +36,7 @@ void decode(WOLF_CPU* cpu) {
     uint8_t destReg2 = Through8(data.icode == ICODE_POP,reg2);
     uint32_t val1 = getRegVal(cpu,reg1);
     uint32_t val2 = getRegVal(cpu,reg2);
+    res.irtype = data.irtype;
     res.ExCond = data.jmpExCond;
     res.destReg = destReg;
     res.destReg2 = destReg2;
