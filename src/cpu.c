@@ -7,7 +7,7 @@ uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
         pthread_mutex_lock(&cpu->clock_execution);
-        fetch_data(cpu);
+        fetch_data(cpu); 
         access_check(cpu);
         decode(cpu);
         execute(cpu);
