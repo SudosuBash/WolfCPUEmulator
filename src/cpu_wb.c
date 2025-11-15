@@ -1,7 +1,4 @@
 #include <cpu.h>
-static inline uint32_t get_reg_data(uint32_t origin,uint32_t mask,uint32_t data) {
-    return (origin & ~mask) | (data & mask);
-}
 //没写完
 void writeback(WOLF_CPU* cpu) {
     WCPUMemResult result = cpu->mem_data_reg;
@@ -19,19 +16,19 @@ void writeback(WOLF_CPU* cpu) {
             if(IS_RTYPE(result.irtype) && ICODE_EXFLAG_MOV_MEM1(result.ExFlag)) {
                 break;
             }
-            uint32_t mask = BE_MASK_GEN(result.ExFlag >> 3);
-            write_reg_val(cpu,result.destReg, get_reg_data(
+            uint8_t exflag = result.ExFlag >> 3;
+            write_reg_val(cpu,result.destReg, DATA32_MASK_BE(
                 cpu->gen_regs.r[result.destReg],
-                mask,
-                result.valC
+                result.valC,
+                BE_EXFLAG_GET(result.ExFlag >> 3)
             ));
             break;
         }
         case ICODE_ALU: {
-            write_reg_val(cpu,result.destReg,get_reg_data(
+            write_reg_val(cpu,result.destReg,DATA32_MASK_BE(
                 cpu->gen_regs.r[result.destReg],
-                0b1111,
-                result.valC
+                result.valC,
+                BE_EXFLAG_GET(0)
             ));
             break;
         }
@@ -49,9 +46,11 @@ void writeback(WOLF_CPU* cpu) {
         case ICODE_ECALL:
         case ICODE_OCALL:
         case ICODE_PUSH:
+        case ICODE_PUSHF:
         case ICODE_ZWC:
             cpu->gen_regs.r[result.destReg] = result.valB;
             break;
+        case ICODE_POPF:
         case ICODE_POP:
             cpu->gen_regs.r[result.destReg2] = result.valB;
             cpu->gen_regs.r[result.destReg] = result.valC;

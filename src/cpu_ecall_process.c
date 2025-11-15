@@ -1,6 +1,8 @@
 #include <cpu.h>
 
 void ecall_proc(WOLF_CPU* cpu) {
+    WCPUExecuteResult result = cpu->ex_data_reg;
+    if(!result.noexception) return;
     switch (cpu->wb_result_reg.icode)
     {
     case ICODE_ECALL:
@@ -19,4 +21,5 @@ void ecall_proc(WOLF_CPU* cpu) {
     default:
         break;
     }
+    result.noexception = 0;
 }

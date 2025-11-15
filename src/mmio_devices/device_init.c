@@ -6,10 +6,10 @@
 
 void* start_device_handle(void* pdevice) {
     WOLF_CPU_BUS_DEVICE* device = (WOLF_CPU_BUS_DEVICE*) device;
-    while (1) {
-        device->start_func(&device);
-        Sleep(1);
-    }
+    // while (1) {
+    //     //device->start_func(&device);
+    //     Sleep(1);
+    // }
     return NULL;
 }
 

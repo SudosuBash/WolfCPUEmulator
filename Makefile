@@ -15,6 +15,5 @@ $(TARGET): $(OBJS)
 
 
 clean:
-	rm *.o 
-	rm *\*.o 
-	rm *\*\*.o
+	@for /r %%d in (*.o *.exe) do del /Q "%%d"
+	@echo Successfully deleted all the files.

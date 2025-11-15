@@ -50,6 +50,10 @@
 //R类
 #define ICODE_POP 0b000101
 //R类
+#define ICODE_PUSHF 0b000111
+//R类
+#define ICODE_POPF 0b001000
+//R类
 
 #define ICODE_ZWC 0b000110
 //R类
@@ -66,8 +70,8 @@
 //R类
 //lier: Load IRQ EXCEPTION Reason %r1
 
-//SCR控制器
-#define ICODE_RSCR 0b110000
+//BCR控制器
+#define ICODE_RBCR 0b110000
 //R类
 #define ICODE_LBCR 0b110001
 //分页模式基地址
@@ -85,6 +89,7 @@
 //R类
 #define ICODE_LEBR 0b110110
 //R类
+#define ICODE_HLT 0b110111
 
 #define ICODE_RET_EXFUNC 0x01
 #define ICODE_IRET_EXFUNC 0x10
@@ -107,13 +112,29 @@
 
 #define ALU_EXFUNC_BITS 3
 
-#define ALU_EXFUNC_NEG_MASK 0b1
-#define ALU_EXFUNC_SGN_MASK 0b10
-
+#define ALU_EXFLAG_NEG_MASK 0b0
+#define ALU_EXFLAG_SGN_MASK 0b1
+#define ALU_EXFLAG_OPR_MASK 0b10
+//OPR: 是否将值应用到对应的寄存器里面
+//例如
+//指令 04 25 01 00 SUBn $1,%r1
+//不更新r1寄存器，只更新SCR寄存器
 #define GET_MLMR_EXFUNC_ALU(exfunc) ((exfunc) >> 4) & 1
 #define ALU_EXFUNC_MLMR_MASK 0x1
 #define ALU_EXFUNC_ML 0x0
 #define ALU_EXFUNC_MR 0x1
+
+#define SCR_OF_FLAG 0
+#define SCR_SF_FLAG 1
+#define SCR_ZF_FLAG 2
+#define SCR_PF_FLAG 3
+#define SCR_CF_FLAG 4
+
+#define GET_SCR_OF_FLAG(flag) (((flag) >> SCR_OF_FLAG) & 1)
+#define GET_SCR_SF_FLAG(flag) (((flag) >> SCR_SF_FLAG) & 1)
+#define GET_SCR_ZF_FLAG(flag) (((flag) >> SCR_ZF_FLAG) & 1)
+#define GET_SCR_PF_FLAG(flag) (((flag) >> SCR_PF_FLAG) & 1)
+#define GET_SCR_CF_FLAG(flag) (((flag) >> SCR_CF_FLAG) & 1)
 
 #define EXCOND_R1_ON(excond) ((excond) >> 3)
 #define EXFLAG_R1_ON(exfunc) ((exfunc) >> 3)
@@ -133,7 +154,7 @@
         && (icode) != ICODE_MOV \
         && (icode) != ICODE_OCALL \
         && (icode) != ICODE_RET \
-        && (icode) != ICODE_RSCR \
+        && (icode) != ICODE_RBCR \
         && (icode) != ICODE_RIRE \
         && (icode) != ICODE_RERE \
         && (icode) != ICODE_LEPV \
@@ -159,7 +180,6 @@
 
 #define ICODE_EXFLAG_MOV_MEM1(exflag) ((exflag) >> 1) & 1
 #define ICODE_EXFLAG_MOV_MEM2(exflag) ((exflag) & 1)
-
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;

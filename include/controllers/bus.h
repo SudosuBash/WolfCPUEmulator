@@ -21,7 +21,7 @@ typedef struct {
     uint32_t data;
     uint8_t be:4;
     uint8_t status:2;
-    uint8_t read_write:1
+    uint8_t read_write:1;
 }BUS_SEND_DATA;
 
 typedef struct WOLF_CPU_BUS_DEVICE WOLF_CPU_BUS_DEVICE,*PWOLF_CPU_BUS_DEVICE;

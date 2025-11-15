@@ -6,6 +6,18 @@ typedef struct {
     uint8_t cache_open:1;
 } WOLF_PADDR_GET;
 
+static const uint32_t bios_code[512 / 4] = {
+    0x0220f0ff,
+    0x04225400,
+    0x82221000,
+    0x03c00080,
+    0x88200000,
+    0x8c210000,
+    0x8a400000,
+    // 0x4010a0a0,
+    0xe2200000
+};
+
 WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
     WOLF_PADDR_GET res = {0};
     PWOLF_MEM_CONTROLLER* controller = &cpu->mem_controller;
@@ -37,7 +49,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     WCPUExecuteResult res = cpu->ex_data_reg;
     WOLF_PADDR_GET paddr = paddr_get(cpu,addr);
 
-    if(paddr.addr & (BE_ALIGN(data.be)) != 0) { //物理内存地址要求4字节对齐
+    if((paddr.addr & (BE_ALIGN(data.be))) != 0) { //物理内存地址要求4字节对齐
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
     }
@@ -74,13 +86,18 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         res1.stat = BCR_RAM_ERR_OK;
         return res1;
     } else if(paddr.addr < BASE_BIOS_ADDR) { //访问MMU，简化逻辑不单独设计一个元件了
-        uint32_t pos_addr = paddr.addr - BASE_MMU_ADDR;
+        uint32_t pos_addr = (paddr.addr - BASE_MMU_ADDR) >> 2;
         if(pos_addr >= MMU_CONTROLLER_REGS * sizeof(uint32_t)) {
             res1.stat = BCR_RAM_ERR_REG_OUT_OF_RANGE;
             return res1;
         }
-        controller->regs[pos_addr] = data.data;
-        
+        controller->regs[pos_addr] = DATA32_MASK_BE(controller->regs[pos_addr],data.data,
+            BE_NOT_ALIGN4_GET(paddr.addr & 3,data.be));
+        //写入对应的寄存器，但是实际上的话是这样的
+        //paddr.addr & 3 获取余数
+        //data.be是对应地址要写入的be
+        //获取到的be就是相对于pos_addr的be
+
         uint32_t cmd = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_CMD];
         uint32_t device_num = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA];
         if(device_num > MAX_BUS_DEVICE) return res1;
@@ -114,17 +131,6 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     return res1;
 }
 
-static const uint32_t bios_code[512 / 4] = {
-    0x0220f0ff,
-    0x82221000,
-    0x03c00080,
-
-    0x88200000,
-    0x8c210000,
-    0x8a400000,
-    // 0x4010a0a0,
-    0xe2200000
-};
 MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be) {
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
     WOLF_CPU_MMU_CONTROLLER* controller = *pmmu;
@@ -181,7 +187,14 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
             res1.stat = BCR_RAM_ERR_REG_OUT_OF_RANGE;
             return res1;
         }
-        res1.data = controller->regs[pos_addr];
+        //摆大烂设计
+        //读取MMU的设备获取寄存器必须4字节对齐，否则触发对齐异常
+        if(be != 0b1111) { 
+            res1.stat = BCR_RAM_ERR_ALIGN;
+            return res1;
+        }
+        uint32_t data = controller->regs[pos_addr >> 2];
+        res1.data = controller->regs[pos_addr >> 2];
     } else {
 //还没有实现对应逻辑，为了能够执行，暂时先用临时一个uint8_t数组代替
         res1.data = bios_code[(paddr.addr - BASE_BIOS_ADDR) >>2];

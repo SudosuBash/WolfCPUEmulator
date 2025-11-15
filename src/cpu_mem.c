@@ -70,6 +70,7 @@ void memory(WOLF_CPU* cpu) {
         case ICODE_RET: 
             if(res.ExFunc != 0) break; //确保普通的ret
             //M[valC] <- valA;
+        case ICODE_POPF:
         case ICODE_POP: {
             MMU_STATUS stat = controller->rd_mmu(&cpu->mmu,rd_addr,be);
             if(stat.stat != BCR_RAM_ERR_OK) {
@@ -80,6 +81,7 @@ void memory(WOLF_CPU* cpu) {
             mem_res.valC = stat.data;
             break;
         }
+        case ICODE_PUSHF:
         case ICODE_PUSH:
         case ICODE_OCALL: {
             MMU_DATA data = {0};

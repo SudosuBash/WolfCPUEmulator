@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <debug/debug_io.h>
 #include <mmio_devices/device_init.h>
+
 uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
@@ -12,10 +13,10 @@ void start_cpu(WOLF_CPU *cpu) {
         access_check(cpu);
         decode(cpu);
         execute(cpu);
+        ecall_proc(cpu);
         memory(cpu);
         writeback(cpu);
         update_PC(cpu);
-        ecall_proc(cpu);
         clk += 1;
         pthread_mutex_unlock(&cpu->clock_execution);
     }
@@ -48,7 +49,9 @@ WOLF_CPU* init_cpu() {
     if(l1_group == NULL) goto FREE_L1_GROUP;
     MACHINE_L2_CACHE_GROUP** l2_group = init_l2_group(CACHE_L2_GROUPS);
     if(l2_group == NULL) goto FREE_L2_GROUP;
-
+    WOLF_ALU* alu = init_alu();
+    if(alu == NULL) goto FREE_ALU;
+    cpu->alu = alu;
     cpu->cache_controller = cache;
     cpu->bus = bus;
     cpu->ecall_controller = ecall;
@@ -60,6 +63,7 @@ WOLF_CPU* init_cpu() {
     cpu->pc = BASE_BIOS_ADDR; //刚开始初始化pc为BASE_BIOS_ADDR，转去执行BIOS的程序
     return cpu;
 
+FREE_ALU: free_l2_group(&l2_group,CACHE_L2_GROUPS);
 FREE_L2_GROUP: free_l1_group(&l1_group,CACHE_L1_GROUPS);
 FREE_L1_GROUP: free_mmu_controller(&mmu);
 FREE_MMU: free_mem(&mem);
@@ -76,6 +80,7 @@ void free_cpu(WOLF_CPU** cpu) {
         free_cache(&(ocpu->cache_controller));
         free_ecall(&(ocpu->ecall_controller));
         free_bus(&(ocpu->bus));
+        free_alu(&(ocpu->alu));
         free(*cpu);
         *cpu = NULL;
     }
@@ -117,6 +122,9 @@ void write_reg_val(WOLF_CPU* cpu,uint8_t regnum,uint32_t value) {
         break;
     case CPU_REG_SPE_BCR:
         cpu->spe_regs.bcr = value & 0xff;
+        break;
+    case CPU_REG_SPE_SCR:
+        cpu->spe_regs.scr = value & 0xff;
         break;
     case CPU_REG_SPE_PGBASE:
         cpu->spe_regs.pg_mode_base_addr_reg = value;

@@ -30,9 +30,10 @@ void execute(WOLF_CPU* cpu) {
         }
         case ICODE_ALU: {
             //用组合逻辑会导致条件为false时这段依然执行，很繁琐
-            uint8_t sgn = data.ExFlag & ALU_EXFUNC_SGN_MASK;
-            uint8_t ex_code = data.ExFlag & ALU_EXFUNC_NEG_MASK;
-            uint8_t final_ex_func = (ex_code << ALU_EXFUNC_BITS) | ex_code;
+            uint8_t sgn = (data.ExFlag >> ALU_EXFLAG_SGN_MASK) & 1;
+            uint8_t ex_code = (data.ExFlag >> ALU_EXFLAG_NEG_MASK) & 1;
+            uint8_t final_ex_func = (ex_code << ALU_EXFUNC_BITS) | data.ExFunc;
+            uint8_t need_op = (data.ExFlag >> ALU_EXFLAG_OPR_MASK) & 1;
             uint32_t res1 = 0;
             uint32_t res2 = 0; //用于乘除
             switch (final_ex_func) //加速
@@ -44,7 +45,7 @@ void execute(WOLF_CPU* cpu) {
                 res1 = cpu->alu->and_operate(&cpu->alu,data.valA,data.valC);
                 break;
             case ALU_FUN_CODE_SUB:
-                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,-data.valC,sgn);
+                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,~data.valC,sgn ^ 1);
                 break;
             case ALU_FUN_CODE_OR:
                 res1 = cpu->alu->or_operate(&cpu->alu,data.valA,data.valC);
@@ -57,7 +58,7 @@ void execute(WOLF_CPU* cpu) {
                 res.noexception = 0;
                 break;
             }
-            res.valC = res1;
+            res.valC = Mux32(need_op,res.valC,res1);
             break;
         }
         case ICODE_MLMR: {
@@ -92,10 +93,12 @@ void execute(WOLF_CPU* cpu) {
             res.valB = data.valB - 4; //WB写回
             res.valC = data.valA + data.valC;
             break;
+        case ICODE_PUSHF:
         case ICODE_PUSH:
             res.valC = data.valA;
             res.valB = data.valB - 4;  //WB写回
             break;
+        case ICODE_POPF:
         case ICODE_POP:
             res.valB = res.valB + 4;
             break;
@@ -104,9 +107,7 @@ void execute(WOLF_CPU* cpu) {
                 Through32(!data.ExFlag & 1,ZWC_32(res.valA));
             res.valB = targetVal;
             break;
-        }
-            
-
+        }   
     }
     res.icode = data.icode;
     res.ExCond = data.ExCond;
