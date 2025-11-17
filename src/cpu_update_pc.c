@@ -9,6 +9,6 @@ void update_PC(WOLF_CPU* cpu) {
         icode == ICODE_OCALL ||
         icode == ICODE_RET);
     uint32_t updated_PC = Through32(cond,result.valC) |
-        Through32(!cond,cpu->pc + 4);
+        Through32(!cond,result.valP);
     cpu->pc = updated_PC;
 }

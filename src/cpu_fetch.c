@@ -11,6 +11,7 @@ static inline uint8_t getExCond(uint8_t type,uint8_t icode,uint32_t data) {
     return Through8(IS_ITYPE(type),val);
 }
 
+
 static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
     uint8_t icodeB = 
         (icode == ICODE_ECALL);
@@ -60,7 +61,7 @@ static inline uint8_t getExFlag(uint8_t type,uint8_t icode,uint32_t data) {
     uint8_t cond = icode == ICODE_MOV; 
     uint8_t movExFlag = (data >> 16) & 0b11111;
     uint8_t val1 = Through8(cond,movExFlag);
-    
+        
     cond = (icode == ICODE_ALU || cond == ICODE_MLMR);
     uint8_t val2 = Through8(cond,(data >> 12) & 0b11111);
     uint8_t final_itype_val =val1 | val2;
@@ -136,7 +137,7 @@ static inline uint8_t getLRegisterA(uint8_t icode,uint32_t data,uint8_t ExFlag,u
 }
 
 static inline uint32_t getIData(uint8_t type, uint8_t icode,uint32_t data) {
-    uint8_t cond = (icode == ICODE_MOV || icode == ICODE_JMP || icode == ICODE_OCALL);
+    uint8_t cond = (icode == ICODE_MOV);
     uint32_t icmd1_4_7_val = Through32(cond,(data & 0xffff));
     cond = (icode == ICODE_ALU);
     uint32_t icmd2_val = Through32(cond,(data & 0x0fff));
@@ -147,8 +148,10 @@ static inline uint32_t getIData(uint8_t type, uint8_t icode,uint32_t data) {
     uint32_t icmd6_val = Through32(cond,(data & 0x3f)); //ECALL 的中断号
     uint32_t final_itype_res = icmd6_val | icmd2_val | icmd3_val | icmd1_4_7_val;
     //以上为 I 类指令的解码器
-    
-    return Through32(IS_ITYPE(type),final_itype_res);
+    cond = (icode == ICODE_JMP || icode == ICODE_OCALL);
+    uint32_t icmdb_val = Through32(cond,(data & 0xffff));
+    return Through32(IS_ITYPE(type),final_itype_res) |
+        Through32(IS_RTYPE(type),icmdb_val);
 }
 
 static inline uint8_t getExFunc(uint8_t type,uint8_t icode,uint32_t data) {
@@ -157,13 +160,15 @@ static inline uint8_t getExFunc(uint8_t type,uint8_t icode,uint32_t data) {
       icode == ICODE_MLMR 
     );
     uint8_t val = Through8(cond,(data >> 17) & 0b1111);
-    cond = (ICODE_RET == icode);
-    uint8_t val2 = Through8(cond,(data >> 21) & 0b1111);
-    uint8_t final_itype_val = val | val2;
+    uint8_t final_itype_val = val;
     //以上为 I 类指令的解码器
     cond = (icode == ICODE_ALU);
     uint8_t valB1 = Through8(cond,(data >> 13));
-    return Through8(IS_ITYPE(type),final_itype_val);
+    cond = (ICODE_RET == icode);
+    uint8_t val2 = Through8(cond,(data >> 21) & 0b1111);
+    //以上为 R 类指令的解码器
+    return Through8(IS_ITYPE(type),final_itype_val) |
+        Through8(IS_RTYPE(type),valB1 | val2);
 }
 
 
@@ -191,7 +196,7 @@ void fetch_data(WOLF_CPU* cpu) {
     result.reg1 = getLRegisterA(icode, data, ExFlag, result.jmpExCond);
     result.reg2 = getLRegisterB(type,icode,data);
     result.idata = getIData(type, icode, data);
-
+    result.valP = cpu->pc + 4;
 
     result.noexception = 1;
     if(IS_ICODE_INVALID(icode,type)) {

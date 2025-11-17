@@ -16,7 +16,7 @@
 #define BUS_RW_READ 0x0
 #define BUS_RW_WRITE 0x1
 
-#define BUS_WAIT_DELTA 500000
+#define BUS_WAIT_DELTA 500
 typedef struct {
     uint32_t data;
     uint8_t be:4;
@@ -38,6 +38,7 @@ typedef void (*device_write_reg_fn)(PWOLF_CPU_BUS_DEVICE* device,uint8_t addr,BU
 
 struct WOLF_CPU_BUS_CONTROLLER {
     uint32_t addr;
+    uint8_t busy:1;
     BUS_SEND_DATA data_cmd_collection;
     WOLF_CPU_BUS_DEVICE* devices[MAX_BUS_DEVICE];
     bus_send_data_fn send_data;

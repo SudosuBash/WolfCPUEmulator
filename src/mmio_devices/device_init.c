@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <mmio_devices/stdo_device.h>
 #include <unistd.h>
+#include <mmio_devices/irq_controller.h>
 void* start_device_handle(void* pdevice) {
     PWOLF_CPU_BUS_DEVICE* device = (PWOLF_CPU_BUS_DEVICE*) pdevice;
     WOLF_CPU_BUS_DEVICE* dev = *device;
@@ -26,12 +27,18 @@ static inline void create_thread(PWOLF_CPU_BUS_DEVICE* device) {
 INIT_STATUS init_devices(WOLF_CPU_BUS_CONTROLLER* controller) {
     PWOLF_CPU_BUS_DEVICE* device = init_stdo_device(controller);
     WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(device,WOLF_MMIO_STDO_DEVICE,bus_device);
-    
     if(device == NULL) goto INIT_DEVICE_FAIL;
     register_device(&controller,*device,0);
     create_thread(device);
 
+    PWOLF_CPU_BUS_DEVICE* irq_device = init_irq_controller(controller);
+    if(irq_device == NULL) goto INIT_DEVICE_IRQ_FAIL;
+    register_device(&controller,*irq_device,1);
+    create_thread(irq_device);
+    
     return DEVICE_INIT_STATUS_SUCCESS;
+
+INIT_DEVICE_IRQ_FAIL: destroy_stdo_device(&dev);
 INIT_DEVICE_FAIL:
     return DEVICE_INIT_STATUS_ERROR;
 }

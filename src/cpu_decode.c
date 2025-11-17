@@ -47,6 +47,7 @@ void decode(WOLF_CPU* cpu) {
     res.valC = getiData(data.icode,data.idata,data.jmpExCond);
     res.ExFlag = data.ExFlag;
     res.noexception = data.noexception; //上传
+    res.valP = data.valP;
 CPU_DECODE_END_STATUS:
     cpu->id_data_reg = res;
 }

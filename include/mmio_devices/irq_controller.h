@@ -27,19 +27,13 @@
 #define IRQ_STATUS_PROCESSING 0x2
 
 #define IRQ_CONTROLLER_DEVICE_REGS 5
-#define BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR 0xF0000200
+#define BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR 0xFFFF000A
 #define IRQ_MAX_PRIO 3
 #define IRQ_INTERRUPTS_SUM 64
 #define IRQ_INT_IN_CPU 0x1
 
 #define IRQ_IGNORED 0x1
 #define IRQ_NOT_IGNORED 0
-
-
-static const char device_name[] = "Wolf IRQ Controller";
-static const char vendor_name[] = "Wolf Emulator";
-static const uint8_t need_space = IRQ_CONTROLLER_DEVICE_REGS;
-static const uint16_t device_id = 0x1003;
 
 typedef struct {
     uint32_t irq_num;
@@ -50,7 +44,7 @@ typedef struct {
     uint8_t status:2;
 } INTERRUPT_DESC;
 
-typedef struct WOLF_IRQ_CONTROLLER WOLF_IRQ_CONTROLLER;
+typedef struct WOLF_IRQ_CONTROLLER WOLF_IRQ_CONTROLLER,*PWOLF_IRQ_CONTROLLER;
 typedef void (*irq_trigger_fn)(WOLF_IRQ_CONTROLLER* irq_controller, WOLF_CPU_BUS_DEVICE* device);
 
 
@@ -63,5 +57,6 @@ struct WOLF_IRQ_CONTROLLER {
     INTERRUPT_DESC registered_interrupts[IRQ_INTERRUPTS_SUM]; //64个
     uint64_t int_valid_flag;
 };
-
+PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller);
+void destroy_irq_device(WOLF_IRQ_CONTROLLER* irq_device);
 #endif

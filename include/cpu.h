@@ -108,13 +108,13 @@
 #define ALU_FUN_CODE_OR 0x3
 #define ALU_FUN_CODE_XOR 0x4
 #define ALU_FUN_CODE_NEG 0x5
-#define ALU_FUN_CODE_SUB 0b1000
-#define ALU_FUN_CODE_DIV 0b1001
-#define ALU_FUN_CODE_NOT 0b1101
+#define ALU_FUN_CODE_SUB 0x6
+#define ALU_FUN_CODE_DIV 0x7
+#define ALU_FUN_CODE_NOT 0x8
 
-#define ALU_EXFUNC_BITS 3
+#define ALU_EXFUNC_BITS 4
 
-#define ALU_EXFLAG_NEG_MASK 0b0
+#define ALU_EXFLAG_EXALU_MASK 0b0
 #define ALU_EXFLAG_SGN_MASK 0b1
 //OPR: 是否将值应用到对应的寄存器里面
 //例如
@@ -141,7 +141,7 @@
 #define GET_SCR_CF_FLAG(flag) (((flag) >> SCR_CF_FLAG) & 1)
 
 #define EXCOND_R1_ON(excond) ((excond) >> 3)
-#define EXFLAG_R1_ON(exfunc) ((exfunc) >> 3)
+#define EXFLAG_R1_ON(exflag) ((exflag) >> 3)
 #define IS_ITYPE(val) ((val) ^ 1)
 #define IS_RTYPE(val) (val)
 #define IS_PRIVILEGE_INSTRUCTION(icode) ((icode) >>4) == 0b11 
@@ -174,7 +174,7 @@
         (icode) == ICODE_RET || \
         (icode) == ICODE_RIRE || \
         (icode) == ICODE_RERE || \
-        (icode) == ICODE_NOP || \
+        (icode) == ICODE_OCALL || \
         IS_PRIVILEGE_INSTRUCTION(icode) \
         ) && !IS_RTYPE(type)) \
     ) || ( \
@@ -194,6 +194,7 @@ typedef struct {
     uint8_t jmpExCond:4;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?
+    uint32_t valP;
 } WCPUFetchData;
 
 typedef struct {
@@ -205,9 +206,10 @@ typedef struct {
     uint32_t valC;
     uint32_t valB;
     uint8_t ExCond:3;
-    uint8_t ExFunc:5;
+    uint8_t ExFunc:4;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?
+    uint32_t valP;
 } WCPUMemResult;
 
 typedef struct {
@@ -220,9 +222,10 @@ typedef struct {
     uint8_t destReg;
     uint8_t destReg2:5;
     uint8_t ExCond:3;
-    uint8_t ExFunc:5;
+    uint8_t ExFunc:4;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?
+    uint32_t valP;
 }WCPUExecuteResult;
 
 typedef struct {
@@ -234,9 +237,10 @@ typedef struct {
     uint32_t valB;
     uint32_t valC;
     uint8_t ExCond:4;
-    uint8_t ExFunc:5;
+    uint8_t ExFunc:4;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?
+    uint32_t valP;
 } WCPUDecodedData;
 
 typedef struct {
@@ -244,7 +248,8 @@ typedef struct {
     uint8_t icode;
     uint32_t valC;
     uint8_t noexception:1;
-    uint8_t ExFunc;
+    uint8_t ExFunc:4;
+    uint32_t valP;
 } WCPUWBResult;
 
 typedef struct {

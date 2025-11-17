@@ -22,10 +22,12 @@ void memory(WOLF_CPU* cpu) {
     mem_res.ExFlag = res.ExFlag;
     mem_res.ExFunc = res.ExFunc;
     mem_res.valB = res.valB;
+    mem_res.valP = res.valP;
     uint32_t wr_data = Through32((
-        icode == ICODE_OCALL ||
         icode == ICODE_PUSH
-    ),res.valC);
+    ),res.valC) | Through32(
+        icode == ICODE_OCALL
+    ,res.valP);
     uint32_t wr_addr = Through32((
         icode == ICODE_OCALL ||
         icode == ICODE_PUSH
@@ -64,7 +66,7 @@ void memory(WOLF_CPU* cpu) {
             break;
         }
         case ICODE_RET: 
-            if(res.ExFunc != 0) break; //确保普通的ret
+            if(res.ExFunc != ICODE_RET_EXFUNC) break; //确保普通的ret
             //M[valC] <- valA;
         case ICODE_POPF:
         case ICODE_POP: {

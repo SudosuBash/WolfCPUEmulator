@@ -14,20 +14,17 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
     bus_ctrl->data_cmd_collection = data;
     bus_ctrl->addr = addr;
     pthread_mutex_lock(&bus_ctrl->mutex);
-
+    bus_ctrl->busy = 1;
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
-    timeout.tv_sec +=0.5;//外设等待0.5s
+    timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
     int res = pthread_cond_timedwait(&bus_ctrl->mutex_cond,&bus_ctrl->mutex,&timeout);
+    bus_ctrl->busy = 0;
     pthread_mutex_unlock(&bus_ctrl->mutex);
 #ifdef _EMU_DEBUG
     fflush(stdout);
     printf("Status = %d\n",bus_ctrl->data_cmd_collection.status);
 #endif
-    // bus_ctrl->data_cmd_collection.be = 0;
-    // bus_ctrl->data_cmd_collection.data = 0;//重置
-    // bus_ctrl->addr = 0;
-    //不能在这重置，否则会导致字符重复输出
     uint8_t status = bus_ctrl->data_cmd_collection.status;
     
     if(bus_ctrl->data_cmd_collection.status == BUS_STATUS_PENDING) {
@@ -36,7 +33,7 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
         return status;
     }
     status = bus_ctrl->data_cmd_collection.status;
-    bus_ctrl->addr = 0;
+
     return status;
 }
 

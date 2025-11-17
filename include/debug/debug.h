@@ -3,6 +3,6 @@
 
 #include <global.h>
 #include <stdio.h>
-uint32_t error_log(const char* str);
-uint32_t debug_log(const char* str);
+#include <cpu.h>
+uint32_t break_execution(WOLF_CPU* cpu);
 #endif

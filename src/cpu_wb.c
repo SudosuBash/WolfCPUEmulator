@@ -50,6 +50,7 @@ void writeback(WOLF_CPU* cpu) {
         case ICODE_PUSH:
         case ICODE_PUSHF:
         case ICODE_ZWC:
+        case ICODE_RET:
             cpu->gen_regs.r[result.destReg] = result.valB;
             break;
         case ICODE_POPF:
@@ -64,6 +65,7 @@ void writeback(WOLF_CPU* cpu) {
     res.noexception = result.noexception;
     res.ExFunc = result.ExFunc;
     res.irtype = result.irtype;
+    res.valP = result.valP;
 WB_ERR_END:
     cpu->wb_result_reg = res;
 }

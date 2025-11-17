@@ -31,7 +31,7 @@ void execute(WOLF_CPU* cpu) {
         case ICODE_ALU: {
             //用组合逻辑会导致条件为false时这段依然执行，很繁琐
             uint8_t sgn = (data.ExFlag >> ALU_EXFLAG_SGN_MASK) & 1;
-            uint8_t ex_code = (data.ExFlag >> ALU_EXFLAG_NEG_MASK) & 1;
+            uint8_t ex_code = (data.ExFlag >> ALU_EXFLAG_EXALU_MASK) & 1;
             uint8_t final_ex_func = (ex_code << ALU_EXFUNC_BITS) | data.ExFunc;
             uint8_t need_op = (data.ExFlag >> ALU_EXFLAG_OPR_MASK) & 1;
             uint32_t res1 = 0;
@@ -123,6 +123,7 @@ void execute(WOLF_CPU* cpu) {
     res.ExFunc = data.ExFunc;
     res.ExFlag = data.ExFlag;
     res.irtype = data.irtype;
+    res.valP = data.valP;
 CPU_EXEC_END_STATUS:
     cpu->ex_data_reg = res;
 }

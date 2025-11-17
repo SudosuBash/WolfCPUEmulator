@@ -15,10 +15,6 @@
 
 #include <stdint.h>
 #include <controllers/bus.h>
-static const char device_name[] = "Wolf Basic Stdio Output";
-static const char vendor_name[] = "Wolf Emulator";
-static const uint8_t need_space = STDO_DEVICE_REGS;
-static const uint16_t device_id = 0x1001;
 
 typedef struct {
     uint8_t regs[STDO_DEVICE_REGS];
@@ -26,8 +22,8 @@ typedef struct {
 
     pthread_rwlock_t device_rwlock;
     pthread_mutex_t stdio_lock;
-} WOLF_MMIO_STDO_DEVICE;
+} WOLF_MMIO_STDO_DEVICE,*PWOLF_MMIO_STDO_DEVICE;
 
 PWOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller);
-void destroy_stdo_device(WOLF_MMIO_STDO_DEVICE* stdo_device);
+void destroy_stdo_device(PWOLF_MMIO_STDO_DEVICE* pstdo_device);
 #endif
