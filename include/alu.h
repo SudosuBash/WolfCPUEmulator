@@ -17,6 +17,7 @@ struct WOLF_ALU {
     ALU_OPERATE_FN_NO_SGN or_operate;
     ALU_OPERATE_FN_NO_SGN xor_operate;
     ALU_OPERATE_FN_NO_SGN neg_operate;
+    ALU_OPERATE_FN_NO_SGN not_operate;
 };
 WOLF_ALU* init_alu();
 void free_alu(WOLF_ALU** alu);

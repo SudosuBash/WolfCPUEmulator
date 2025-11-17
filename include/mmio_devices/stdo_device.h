@@ -21,11 +21,13 @@ static const uint8_t need_space = STDO_DEVICE_REGS;
 static const uint16_t device_id = 0x1001;
 
 typedef struct {
-    WOLF_CPU_BUS_DEVICE* bus_device;
     uint8_t regs[STDO_DEVICE_REGS];
+    WOLF_CPU_BUS_DEVICE* bus_device;
+
     pthread_rwlock_t device_rwlock;
+    pthread_mutex_t stdio_lock;
 } WOLF_MMIO_STDO_DEVICE;
 
-WOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller);
+PWOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller);
 void destroy_stdo_device(WOLF_MMIO_STDO_DEVICE* stdo_device);
 #endif

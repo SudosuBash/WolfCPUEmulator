@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <debug/debug_io.h>
 #include <mmio_devices/device_init.h>
-
+#include <unistd.h>
 uint64_t clk = 0;
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
@@ -26,7 +26,6 @@ void init_env() {
     WOLF_CPU* cpu = init_cpu();
     init_devices(cpu->bus);
     start_cpu(cpu);
-
     free_cpu(&cpu);
 }
 

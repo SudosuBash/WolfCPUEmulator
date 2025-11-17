@@ -9,11 +9,7 @@ void memory(WOLF_CPU* cpu) {
     uint8_t icode = res.icode;
     uint8_t exflag = res.ExFlag;
     
-    uint8_t be = exflag >> 3;
-    uint8_t be1b = Through8(be==1,0b1);
-    uint8_t be2b = Through8(be==2,0b11);
-    uint8_t be4b = Through8(be==0,0b1111);
-    uint8_t finalBe=be1b | be2b | be4b;
+    uint8_t be = ICODE_EXFLAG_MOV_BE(exflag >> 3);
     mem_res.destReg = res.destReg;
     mem_res.destReg2 = res.destReg2;
     mem_res.ExCond = res.ExCond;
@@ -85,7 +81,7 @@ void memory(WOLF_CPU* cpu) {
         case ICODE_PUSH:
         case ICODE_OCALL: {
             MMU_DATA data = {0};
-            data.be = finalBe;
+            data.be = be;
             data.data = wr_data;
             MMU_STATUS stat = controller->wr_mmu(&cpu->mmu,wr_addr,data);
             if(stat.stat != BCR_RAM_ERR_OK) {

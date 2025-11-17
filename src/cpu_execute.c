@@ -4,7 +4,7 @@
                 Through32(!(((data) & 0x0000080) >> 7), res.valA & 0x000000ff)) )
 #define ZWC_32(data) ( (Through32(((data) & 0x00008000) >> 15,(data) | 0xffff0000) |\
                 Through32(!(((data) & 0x0008000) >> 15), (data) & 0x0000ffff)) )
-                               
+
 void execute(WOLF_CPU* cpu) {
     WCPUDecodedData data = cpu->id_data_reg;
     uint8_t icode = data.icode;
@@ -18,7 +18,7 @@ void execute(WOLF_CPU* cpu) {
     switch (icode) {
         case ICODE_MOV: {
             uint8_t i1_mem = ICODE_EXFLAG_MOV_MEM1(data.ExFlag);
-            uint8_t i2_mem = ICODE_EXFLAG_MOV_MEM1(data.ExFlag);
+            uint8_t i2_mem = ICODE_EXFLAG_MOV_MEM2(data.ExFlag);
             if(i1_mem && i2_mem && IS_RTYPE(data.irtype)) {
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE);
                 goto CPU_EXEC_END_STATUS;
@@ -41,11 +41,12 @@ void execute(WOLF_CPU* cpu) {
             case ALU_FUN_CODE_ADD:
                 res1 = cpu->alu->add_operate(&cpu->alu,data.valA,data.valC,sgn);
                 break;
-            case ALU_FUN_CODE_AND:
-                res1 = cpu->alu->and_operate(&cpu->alu,data.valA,data.valC);
-                break;
             case ALU_FUN_CODE_SUB:
                 res1 = cpu->alu->add_operate(&cpu->alu,data.valA,~data.valC,sgn ^ 1);
+                break;
+
+            case ALU_FUN_CODE_AND:
+                res1 = cpu->alu->and_operate(&cpu->alu,data.valA,data.valC);
                 break;
             case ALU_FUN_CODE_OR:
                 res1 = cpu->alu->or_operate(&cpu->alu,data.valA,data.valC);
@@ -53,12 +54,18 @@ void execute(WOLF_CPU* cpu) {
             case ALU_FUN_CODE_XOR:
                 res1 = cpu->alu->xor_operate(&cpu->alu,data.valA,data.valC);
                 break;
+            case ALU_FUN_CODE_NEG:
+                res1 = cpu->alu->neg_operate(&cpu->alu,data.valA,0);
+                break;
+            case ALU_FUN_CODE_NOT:
+                res1 = cpu->alu->not_operate(&cpu->alu,data.valA,0);
+                break;
             default: 
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ALU_FUNC); //异常触发函数
                 res.noexception = 0;
                 break;
             }
-            res.valC = Mux32(need_op,res.valC,res1);
+            res.valC = Mux32(need_op,res.valA,res1);
             break;
         }
         case ICODE_MLMR: {
@@ -68,10 +75,10 @@ void execute(WOLF_CPU* cpu) {
             switch (ml_mr)
             {
             case ALU_EXFUNC_ML:
-                res1 = cpu->alu->ml_operate(&cpu->alu,data.valA,data.valB,is_alu);
+                res1 = cpu->alu->ml_operate(&cpu->alu,data.valA,data.valC,is_alu);
                 break;
             case ALU_EXFUNC_MR:
-                res1 = cpu->alu->mr_operate(&cpu->alu,data.valA,data.valB,is_alu);
+                res1 = cpu->alu->mr_operate(&cpu->alu,data.valA,data.valC,is_alu);
                 break;
             }
             res.valC = res1;

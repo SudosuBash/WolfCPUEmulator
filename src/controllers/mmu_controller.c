@@ -7,15 +7,103 @@ typedef struct {
 } WOLF_PADDR_GET;
 
 static const uint32_t bios_code[512 / 4] = {
-    0x0220f0ff,
-    0x04225400,
-    0x82221000,
-    0x03c00080,
-    0x88200000,
-    0x8c210000,
-    0x8a400000,
-    // 0x4010a0a0,
-    0xe2200000
+    // 0x021800ff,
+    // 0x04244500,
+    // 0x04240500,
+    // 0x82221000,
+    // 0x03c00080,
+    // 0x88200000,
+    // 0x8c210000,
+    // 0x8a400000,
+    // // 0x4010a0a0,
+    // 0xe2200000
+    //Hello World的机器码
+    0x0210ffff,
+    0x06000010,
+
+    0x02100200,
+    0x02284800,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+    
+    0x02100200,
+    0x02286500,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+    
+    0x02100200,
+    0x02286c00,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02286c00,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02286f00,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02282c00,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02285700,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02286F00,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02287200,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02286C00,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02286400,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
+
+    0x02100200,
+    0x02282100,
+    0x8202A000,
+    0x02100000,
+    0x02280100,
+    0x8202a000,
 };
 
 WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
@@ -74,12 +162,13 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         BUS_SEND_DATA bits = {0};
         bits.be = data.be;
         bits.read_write = BUS_RW_WRITE;
+        bits.data = data.data;
         uint8_t status = controller->send_data(&cpu->bus,paddr.addr,bits);
         if(status == BUS_STATUS_ERROR) {
             res1.stat = BCR_RAM_ERR;
             return res1;
         }
-        if(bits.status == BUS_STATUS_TIMEOUT) {
+        if(status == BUS_STATUS_TIMEOUT) {
             res1.stat = BCR_RAM_ERR_REG_TIMEOUT;
             return res1;
         }

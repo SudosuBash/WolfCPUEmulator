@@ -9,14 +9,14 @@
 #define MAX_BUS_DEVICE 256
 
 #define BUS_STATUS_ERROR 0x2
-#define BUS_STATUS_SUCCESS 0x1
-#define BUS_STATUS_PENDING 0x0
+#define BUS_STATUS_PENDING 0x1
+#define BUS_STATUS_SUCCESS 0x0
 #define BUS_STATUS_TIMEOUT 0x3
 
 #define BUS_RW_READ 0x0
 #define BUS_RW_WRITE 0x1
 
-#define BUS_WAIT_DELTA 3000
+#define BUS_WAIT_DELTA 500000
 typedef struct {
     uint32_t data;
     uint8_t be:4;
@@ -42,6 +42,8 @@ struct WOLF_CPU_BUS_CONTROLLER {
     WOLF_CPU_BUS_DEVICE* devices[MAX_BUS_DEVICE];
     bus_send_data_fn send_data;
     bus_recv_data_fn recv_data;
+    pthread_mutex_t mutex;
+    pthread_cond_t mutex_cond; //等待反馈
 };
 
 struct WOLF_CPU_BUS_DEVICE {
@@ -53,7 +55,6 @@ struct WOLF_CPU_BUS_DEVICE {
     uint8_t need_space;
     uint8_t device_base_status;
     uint32_t irq_number; //传递中断号
-    uint8_t device_busy:2;
 
     pthread_t thread;
     pthread_attr_t thread_attr;

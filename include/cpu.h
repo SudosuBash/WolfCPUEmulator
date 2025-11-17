@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <logics/logic_alg.h>
-#include "alu.h"
+#include <alu.h>
 
 #define IS_IN_KERN_MODE(cpu) \
         !((cpu)->spe_regs.bcr & KERN_MODE_MASK)
@@ -21,7 +21,7 @@
 #define IS_PGO_ON(cpu) \
     ((cpu)->spe_regs.bcr & BCR_PGO_MASK) >> 2
 
-#define BASE_MMIO_ADDR 0xff000000
+#define BASE_MMIO_ADDR 0xffff0000
 #define BASE_MMU_ADDR 0xfffffd00
 #define BASE_BIOS_ADDR 0xfffffe00
 //BIOS 512 B
@@ -40,6 +40,7 @@
 #define CPU_REG_IRQ_REASON 0b10111
 //中断发生原因寄存器
 #define CPU_REG_RSP 14
+#define CPU_REG_MULDIV 13
 
 #define ICODE_NOP 0b000000
 #define ICODE_MOV 0b000001
@@ -101,25 +102,28 @@
 #define CMD_ITYPE 0
 #define CMD_RTYPE 1
 
-#define ALU_FUN_CODE_ADD 0x1
-#define ALU_FUN_CODE_MUL 0x2
-#define ALU_FUN_CODE_AND 0x3
-#define ALU_FUN_CODE_OR 0x4
-#define ALU_FUN_CODE_XOR 0x5
-#define ALU_FUN_CODE_NEG 0x6
-#define ALU_FUN_CODE_SUB 0b1001
-#define ALU_FUN_CODE_DIV 0b1010
+#define ALU_FUN_CODE_ADD 0x0
+#define ALU_FUN_CODE_MUL 0x1
+#define ALU_FUN_CODE_AND 0x2
+#define ALU_FUN_CODE_OR 0x3
+#define ALU_FUN_CODE_XOR 0x4
+#define ALU_FUN_CODE_NEG 0x5
+#define ALU_FUN_CODE_SUB 0b1000
+#define ALU_FUN_CODE_DIV 0b1001
+#define ALU_FUN_CODE_NOT 0b1101
 
 #define ALU_EXFUNC_BITS 3
 
 #define ALU_EXFLAG_NEG_MASK 0b0
 #define ALU_EXFLAG_SGN_MASK 0b1
-#define ALU_EXFLAG_OPR_MASK 0b10
 //OPR: 是否将值应用到对应的寄存器里面
 //例如
 //指令 04 25 01 00 SUBn $1,%r1
 //不更新r1寄存器，只更新SCR寄存器
-#define GET_MLMR_EXFUNC_ALU(exfunc) ((exfunc) >> 4) & 1
+#define ALU_EXFLAG_OPR_MASK 0b10
+
+//是否仅运算
+#define GET_MLMR_EXFUNC_ALU(exfunc) ((exfunc) >> 1) & 1
 #define ALU_EXFUNC_MLMR_MASK 0x1
 #define ALU_EXFUNC_ML 0x0
 #define ALU_EXFUNC_MR 0x1
@@ -288,4 +292,5 @@ void start_cpu(WOLF_CPU* cpu);
 WOLF_CPU* init_cpu();
 void free_cpu(WOLF_CPU** cpu);
 void init_env();
+
 #endif

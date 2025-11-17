@@ -47,9 +47,9 @@
 #define BE_ALIGN(data) \
    BE_DATA(data) - 1
 
-#define BE_EXFLAG_GET(data) \
+#define ICODE_EXFLAG_MOV_BE(data) \
    (Through32((data)==0b1,0b1) | \
-   Through32((data)==0b10,0x11) | \
+   Through32((data)==0b10,0b11) | \
    Through32((data)==0b0 || (data) == 0b11,0b1111))
 //通过EXFLAG获取对应的掩码
 #define DATA32_MASK_BE(origin,dest,be) ( \
@@ -67,6 +67,6 @@
 //这种直接打表了,作用: 获取非4字节对齐对应最接近的4字节对齐的地址的Be
 //例如: 地址0x2,访问2字节返回结果: 0b0011
 //地址0x2,访问1字节返回结果: 0b0010
-#define DEBUG_ON 1
+// #define _EMU_DEBUG 1
 
 #endif

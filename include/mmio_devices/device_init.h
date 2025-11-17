@@ -7,4 +7,5 @@
 #define DEVICE_INIT_STATUS_ERROR 0xff
 typedef uint8_t INIT_STATUS;
 INIT_STATUS init_devices(WOLF_CPU_BUS_CONTROLLER* controller);
+void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller);
 #endif

@@ -17,18 +17,20 @@ void writeback(WOLF_CPU* cpu) {
                 break;
             }
             uint8_t exflag = result.ExFlag >> 3;
+            uint8_t bec = ICODE_EXFLAG_MOV_BE(result.ExFlag >> 3);
             write_reg_val(cpu,result.destReg, DATA32_MASK_BE(
                 cpu->gen_regs.r[result.destReg],
                 result.valC,
-                BE_EXFLAG_GET(result.ExFlag >> 3)
+                ICODE_EXFLAG_MOV_BE(result.ExFlag >> 3)
             ));
             break;
         }
+        case ICODE_MLMR:
         case ICODE_ALU: {
             write_reg_val(cpu,result.destReg,DATA32_MASK_BE(
                 cpu->gen_regs.r[result.destReg],
                 result.valC,
-                BE_EXFLAG_GET(0)
+                ICODE_EXFLAG_MOV_BE(0)
             ));
             break;
         }
