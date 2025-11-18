@@ -14,7 +14,7 @@ void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
     cpu->ecall_regs.mreason = reason;
     cpu->ecall_regs.mmode = IS_IN_KERN_MODE(cpu);
     uint8_t newMode = (cpu->ecall_regs.memode >> ecode) & 1;
-    cpu->spe_regs.bcr |= (newMode << (KERN_MODE_MASK - 1));
+    cpu->spe_regs.bcr |= (newMode << (BCR_KERN_MODE_MASK));
     cpu->pc = base_addr;
 }
 
@@ -22,7 +22,7 @@ void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
 //异步时序
 void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
-    if(cpu->spe_regs.bcr & IRQ_DISALLOW_MASK) return;
+    if(cpu->spe_regs.bcr & BCR_IRQ_DISALLOW_MASK) return;
     pthread_mutex_lock(&cpu->clock_execution); //加锁保证时序统一
 
     BUS_SEND_DATA data = {
@@ -39,22 +39,22 @@ void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl, uint8_t reason) {
     cpu->irq_regs.mmode = IS_IN_KERN_MODE(cpu);
     uint8_t newMode = (cpu->irq_regs.mimode >> irqcode) & 1;
     cpu->pc = base_addr;
-    cpu->spe_regs.bcr |= (IRQ_DISALLOW_MASK | (newMode << (KERN_MODE_MASK - 1)));
+    cpu->spe_regs.bcr |= (BCR_IRQ_DISALLOW_MASK | (newMode << (BCR_KERN_MODE_MASK)));
     
     pthread_mutex_unlock(&cpu->clock_execution);
 }
 
 void eret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
-    cpu->spe_regs.bcr &= cpu->ecall_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
+    cpu->spe_regs.bcr &= cpu->ecall_regs.mmode << (BCR_KERN_MODE_MASK); //恢复特权级
     cpu->pc = cpu->ecall_regs.mpc + 4; //跳过当前指令
     cpu->ecall_regs.mep = 0;
     cpu->ecall_regs.mreason = 0;
 } 
 void iret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
-    cpu->spe_regs.bcr &= (0b11111111 ^ IRQ_DISALLOW_MASK);
-    cpu->spe_regs.bcr &= cpu->irq_regs.mmode << (KERN_MODE_MASK - 1); //恢复特权级
+    cpu->spe_regs.bcr &= (0b11111111 ^ BCR_IRQ_DISALLOW_MASK);
+    cpu->spe_regs.bcr &= cpu->irq_regs.mmode << (BCR_KERN_MODE_MASK); //恢复特权级
     cpu->pc = cpu->irq_regs.mpc;
     cpu->ecall_regs.mep = 0;
     cpu->ecall_regs.mreason = 0;

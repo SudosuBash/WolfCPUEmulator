@@ -7,6 +7,7 @@
 #include <logics/logic_alg.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <cpu.h>
 
 #define IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR 0x0
 #define IRQ_CONTROLLER_DEVICE_STAT_REG_ADDR 0x1
@@ -57,6 +58,6 @@ struct WOLF_IRQ_CONTROLLER {
     INTERRUPT_DESC registered_interrupts[IRQ_INTERRUPTS_SUM]; //64个
     uint64_t int_valid_flag;
 };
-PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller);
-void destroy_irq_device(WOLF_IRQ_CONTROLLER* irq_device);
+PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller,WOLF_CPU* cpu_instance);
+void destroy_irq_device(PWOLF_IRQ_CONTROLLER* pirq_device);
 #endif

@@ -22,11 +22,11 @@ static void print_reg_info(WOLF_CPU* cpu) {
         cpu->gen_regs.r[12],
         cpu->gen_regs.r[13],
         cpu->gen_regs.r[14]);
-    printf("PC: 0x%08x\n",
-        cpu->pc);
-    printf("BCR: %d\n",
-        cpu->spe_regs.bcr);
-    printf("SCR: %s, %s, %s, %s, %s\n",
+    printf("PC: 0x%08x    %s  %s  %s  %s  %s  %s  %s\n",
+        cpu->pc,
+        IS_IN_KERN_MODE(cpu) ? "KR" : "UR",
+        IS_PGO_ON(cpu) ? "PG": "NG",
+        IS_IRQ_ALLOW(cpu) ? "IR" : "NI",
         GET_SCR_CF_FLAG(cpu->spe_regs.scr) ? "CF" : "NC",
         GET_SCR_SF_FLAG(cpu->spe_regs.scr) ? "SF" : "NS",
         GET_SCR_ZF_FLAG(cpu->spe_regs.scr) ? "ZF" : "NZ",

@@ -57,16 +57,9 @@ static void device_output(WOLF_MMIO_STDO_DEVICE* device,uint8_t write_buf) {
 static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE,bus_device);
-    WOLF_CPU_BUS_CONTROLLER* bus_controller = device->bus_controller;
-    uint32_t address = bus_controller->addr;
-    if(bus_controller->busy && bus_controller->addr < device->base_address + device->need_space && bus_controller->addr >= device->base_address) {
-        if(bus_controller->data_cmd_collection.read_write == BUS_RW_READ) 
-            read_reg(pdevice,address,bus_controller->data_cmd_collection.be);
-        else if(bus_controller->data_cmd_collection.read_write == BUS_RW_WRITE) 
-            write_reg(pdevice,address,bus_controller->data_cmd_collection);
-        reset_bus(bus_controller);
-        return; //下一次循环，开始处理命令
-    }
+   
+    PROCESS_DEVICE_REGISTER_WRITING(device);
+
     pthread_rwlock_wrlock(&(dev->device_rwlock));
     switch (dev->regs[STDO_DEVICE_FUNC_REG]) {
         case 1:
@@ -88,17 +81,8 @@ PWOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
     if(stdo_device == NULL || bus_device == NULL)
         return NULL; 
 
-    strncpy(bus_device->name, device_name, DEVICE_NAME_STR_MAX);
-    strncpy(bus_device->vendor, vendor_name,DEVICE_VENDOR_STR_MAX);
-    bus_device->bus_controller = controller;
-    bus_device->vendor_id = device_id;
+    INIT_BUS_DEVICE(bus_device,device_name,vendor_name,controller,device_id,need_space,device_start,read_reg,write_reg);
     stdo_device->bus_device = bus_device;
-
-    bus_device->need_space = need_space;
-    bus_device->start_func = device_start;
-    bus_device->vendor_id = device_id;
-    bus_device->rd_reg_func = read_reg;
-    bus_device->wr_reg_func = write_reg;
 
 #ifdef _EMU_MMIO_DEBUG
     bus_device->base_address = 0xffff0000;

@@ -13,13 +13,17 @@
 #include <logics/logic_alg.h>
 #include <alu.h>
 
-#define IS_IN_KERN_MODE(cpu) \
-        !((cpu)->spe_regs.bcr & KERN_MODE_MASK)
+#define BCR_KERN_MODE_MASK 0
+#define BCR_PGO_MASK 2
+#define BCR_IRQ_DISALLOW_MASK 0b10000
+#define BCR_IRQ_DISALLOW_MASK_BIT 4
 
-#define IS_CACHE_ON(cpu) \
-    ((cpu)->spe_regs.bcr & CACHE_OPEN_MASK) >> 1
+#define IS_IN_KERN_MODE(cpu) \
+        !(((cpu)->spe_regs.bcr >> BCR_KERN_MODE_MASK) & 1)
 #define IS_PGO_ON(cpu) \
-    ((cpu)->spe_regs.bcr & BCR_PGO_MASK) >> 2
+    (((cpu)->spe_regs.bcr >> BCR_PGO_MASK) & 1)
+#define IS_IRQ_ALLOW(cpu) \
+    !(((cpu)->spe_regs.bcr >> BCR_IRQ_DISALLOW_MASK_BIT) & 1)
 
 #define BASE_MMIO_ADDR 0xffff0000
 #define BASE_MMU_ADDR 0xfffffd00
@@ -59,7 +63,9 @@
 #define ICODE_ZWC 0b000110
 //R类
 #define ICODE_JMP 0b100000
+//I类
 #define ICODE_OCALL 0b100011
+//I类
 
 #define ICODE_ECALL 0b100010
 //I类
@@ -91,6 +97,7 @@
 #define ICODE_LEBR 0b110110
 //R类
 #define ICODE_HLT 0b110111
+
 
 #define ICODE_RET_EXFUNC 0x01
 #define ICODE_IRET_EXFUNC 0x10
@@ -174,11 +181,12 @@
         (icode) == ICODE_RET || \
         (icode) == ICODE_RIRE || \
         (icode) == ICODE_RERE || \
-        (icode) == ICODE_OCALL || \
         IS_PRIVILEGE_INSTRUCTION(icode) \
         ) && !IS_RTYPE(type)) \
     ) || ( \
-        ((icode) == ICODE_ECALL) && \
+        ((icode) == ICODE_ECALL || \
+        (icode) == ICODE_OCALL || \
+        (icode) == ICODE_JMP) && \
         !IS_ITYPE(type) \
     ))
 

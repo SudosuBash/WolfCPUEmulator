@@ -27,7 +27,7 @@ void start_cpu(WOLF_CPU *cpu) {
 
 void init_env() {
     WOLF_CPU* cpu = init_cpu();
-    init_devices(cpu->bus);
+    init_devices(cpu);
     start_cpu(cpu);
     free_cpu(&cpu);
 }
