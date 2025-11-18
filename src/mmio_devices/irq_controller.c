@@ -47,10 +47,12 @@ void irq_trigger(WOLF_IRQ_CONTROLLER* controller, WOLF_CPU_BUS_DEVICE* device) {
     pthread_mutex_lock(&(controller->device_rwlock));
     //加速处理，默认一切参数合法，否则太慢了
     uint8_t device_irq_num = device->irq_number;
-    // if(! controller->registered_interrupts[device->irq_number].enabled) {
-    //     pthread_mutex_unlock(&(controller->device_rwlock)); 
-    //     return; //禁止中断直接返回
-    // }
+#ifndef _EMU_IRQ_TEST_DEBUG
+    if(! controller->registered_interrupts[device->irq_number].enabled) {
+        pthread_mutex_unlock(&(controller->device_rwlock)); 
+        return; //禁止中断直接返回
+    }
+#endif
     controller->registered_interrupts[device->irq_number].status = IRQ_STATUS_SUSPEND; //改为挂起
     controller->int_valid_flag |= GET_64_SET_FLAG(device->irq_number);
     pthread_mutex_unlock(&(controller->device_rwlock));

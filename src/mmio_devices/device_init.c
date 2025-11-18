@@ -1,17 +1,16 @@
 #include <mmio_devices/device_init.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <windows.h>
 #include <mmio_devices/stdo_device.h>
 #include <unistd.h>
 #include <mmio_devices/irq_controller.h>
 #include <mmio_devices/clock_device.h>
+
 void* start_device_handle(void* pdevice) {
     PWOLF_CPU_BUS_DEVICE* device = (PWOLF_CPU_BUS_DEVICE*) pdevice;
     WOLF_CPU_BUS_DEVICE* dev = *device;
     while (1) {
         (*device)->start_func(device);
-        usleep(20);
     }
     return NULL;
 }
@@ -21,7 +20,7 @@ static inline void create_thread(PWOLF_CPU_BUS_DEVICE* device) {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_create(&thread,&attr,start_device_handle,device);
-    Sleep(1);
+    usleep(1000);
     (*device)->thread_attr = attr;
     (*device)->thread = thread;
 }

@@ -13,14 +13,19 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
     data.read_write = BUS_RW_WRITE;
     bus_ctrl->data_cmd_collection = data;
     bus_ctrl->addr = addr;
+    
+    pthread_mutex_lock(&bus_ctrl->busy_mutex);
+    pthread_cond_broadcast(&bus_ctrl->busy_cond);
+    //广播设备
+    pthread_mutex_unlock(&bus_ctrl->busy_mutex);
+
     pthread_mutex_lock(&bus_ctrl->mutex);
-    bus_ctrl->busy = 1;
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
     timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
     int res = pthread_cond_timedwait(&bus_ctrl->mutex_cond,&bus_ctrl->mutex,&timeout);
-    bus_ctrl->busy = 0;
     pthread_mutex_unlock(&bus_ctrl->mutex);
+
 #ifdef _EMU_DEBUG
     fflush(stdout);
     printf("Status = %d\n",bus_ctrl->data_cmd_collection.status);
@@ -29,11 +34,9 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
     
     if(bus_ctrl->data_cmd_collection.status == BUS_STATUS_PENDING) {
         bus_ctrl->data_cmd_collection.status = BUS_STATUS_TIMEOUT; //得不到响应，设定超时  
-        status = bus_ctrl->data_cmd_collection.status;
+        status = BUS_STATUS_TIMEOUT;
         return status;
     }
-    status = bus_ctrl->data_cmd_collection.status;
-
     return status;
 }
 
@@ -45,18 +48,29 @@ BUS_SEND_DATA bus_recv_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,B
     bus_ctrl->data_cmd_collection = data;
     bus_ctrl->addr = addr;
 
+    pthread_mutex_lock(&bus_ctrl->busy_mutex);
+    pthread_cond_broadcast(&bus_ctrl->busy_cond);
+    //广播设备
+    pthread_mutex_unlock(&bus_ctrl->busy_mutex);
     uint16_t wait_delta = 0;
     while(bus_ctrl->data_cmd_collection.status != BUS_STATUS_PENDING && wait_delta < BUS_WAIT_DELTA) {
         wait_delta ++;
         Sleep(1);
     }
+    
+    pthread_mutex_lock(&bus_ctrl->mutex);
+    struct timespec timeout;
+    clock_gettime(CLOCK_REALTIME, &timeout);
+    timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
+    int res = pthread_cond_timedwait(&bus_ctrl->mutex_cond,&bus_ctrl->mutex,&timeout);
+    pthread_mutex_unlock(&bus_ctrl->mutex);
 
     data.data = bus_ctrl->data_cmd_collection.data;
     data.status = bus_ctrl->data_cmd_collection.status;
 
-    bus_ctrl->data_cmd_collection.be = 0;
     if(bus_ctrl->data_cmd_collection.status == BUS_STATUS_PENDING) {
-        bus_ctrl->data_cmd_collection.status = BUS_STATUS_TIMEOUT; //得不到响应，设定超时  
+        bus_ctrl->data_cmd_collection.status = BUS_STATUS_TIMEOUT; //得不到响应，设定超时
+        data.status = BUS_STATUS_TIMEOUT;
         return data;
     }
     bus_ctrl->data_cmd_collection.status = BUS_STATUS_SUCCESS;
@@ -70,13 +84,20 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
     controller->send_data = bus_send_data;
     controller->recv_data = bus_recv_data;
     pthread_mutex_init(&(controller->mutex),NULL);
+    pthread_mutex_init(&(controller->busy_mutex),NULL);
     pthread_cond_init(&(controller->mutex_cond),NULL);
+    pthread_cond_init(&(controller->busy_cond),NULL);
     //后续实现register_devices 
     return controller;
 }
 
 void free_bus(WOLF_CPU_BUS_CONTROLLER** bus) {
     if(*bus != NULL) {
+        pthread_mutex_destroy(&(*bus)->mutex);
+        pthread_mutex_destroy(&(*bus)->busy_mutex);
+        pthread_cond_destroy(&(*bus)->mutex_cond);
+        pthread_cond_destroy(&(*bus)->busy_cond);
+        
         free(*bus);
         *bus = NULL;
     }
