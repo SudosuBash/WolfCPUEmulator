@@ -8,17 +8,18 @@
 
 uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
     WOLF_CPU_BUS_CONTROLLER* bus_ctrl = *pbus_ctrl;
-    
+
+    pthread_mutex_lock(&bus_ctrl->busy_mutex);
     data.status = BUS_STATUS_PENDING;
     data.read_write = BUS_RW_WRITE;
     bus_ctrl->data_cmd_collection = data;
     bus_ctrl->addr = addr;
-    
-    pthread_mutex_lock(&bus_ctrl->busy_mutex);
-    pthread_cond_broadcast(&bus_ctrl->busy_cond);
-    //广播设备
+    pthread_cond_broadcast(&bus_ctrl->busy_cond[0]);
+    pthread_cond_broadcast(&bus_ctrl->busy_cond[1]);
+    pthread_cond_broadcast(&bus_ctrl->busy_cond[2]);
     pthread_mutex_unlock(&bus_ctrl->busy_mutex);
 
+    //广播所有设备
     pthread_mutex_lock(&bus_ctrl->device_request_mutex);
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
@@ -42,28 +43,25 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
 
 BUS_SEND_DATA bus_recv_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
     WOLF_CPU_BUS_CONTROLLER* bus_ctrl = *pbus_ctrl;
-    data.status = BUS_STATUS_PENDING;
-    data.read_write = BUS_RW_READ;
-
-    bus_ctrl->data_cmd_collection = data;
-    bus_ctrl->addr = addr;
 
     pthread_mutex_lock(&bus_ctrl->busy_mutex);
-    pthread_cond_broadcast(&bus_ctrl->busy_cond);
+    data.status = BUS_STATUS_PENDING;
+    data.read_write = BUS_RW_READ;
+    bus_ctrl->data_cmd_collection = data;
+    bus_ctrl->addr = addr;
+    pthread_cond_broadcast(&bus_ctrl->busy_cond[0]);
+    pthread_cond_broadcast(&bus_ctrl->busy_cond[1]);
+    pthread_cond_broadcast(&bus_ctrl->busy_cond[2]);
+    pthread_mutex_unlock(&bus_ctrl->busy_mutex); 
     //广播设备
-    pthread_mutex_unlock(&bus_ctrl->busy_mutex);
-    uint16_t wait_delta = 0;
-    while(bus_ctrl->data_cmd_collection.status != BUS_STATUS_PENDING && wait_delta < BUS_WAIT_DELTA) {
-        wait_delta ++;
-        Sleep(1);
-    }
-    
+
     pthread_mutex_lock(&bus_ctrl->device_request_mutex);
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
     timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
     int res = pthread_cond_timedwait(&bus_ctrl->device_request_mutex_cond,&bus_ctrl->device_request_mutex,&timeout);
     pthread_mutex_unlock(&bus_ctrl->device_request_mutex);
+
 
     data.data = bus_ctrl->data_cmd_collection.data;
     data.status = bus_ctrl->data_cmd_collection.status;
@@ -84,9 +82,13 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
     controller->send_data = bus_send_data;
     controller->recv_data = bus_recv_data;
     pthread_mutex_init(&(controller->device_request_mutex),NULL);
-    pthread_mutex_init(&(controller->busy_mutex),NULL);
     pthread_cond_init(&(controller->device_request_mutex_cond),NULL);
-    pthread_cond_init(&(controller->busy_cond),NULL);
+    
+    pthread_mutex_init(&(controller->busy_mutex),NULL);
+    for(uint8_t i=0;i<BUS_MUTEX_COND_COUNT;i++) {
+        pthread_cond_init(&(controller->busy_cond[i]),NULL);
+    }
+
     //后续实现register_devices 
     return controller;
 }
@@ -94,9 +96,11 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
 void free_bus(WOLF_CPU_BUS_CONTROLLER** bus) {
     if(*bus != NULL) {
         pthread_mutex_destroy(&(*bus)->device_request_mutex);
-        pthread_mutex_destroy(&(*bus)->busy_mutex);
         pthread_cond_destroy(&(*bus)->device_request_mutex_cond);
-        pthread_cond_destroy(&(*bus)->busy_cond);
+        pthread_mutex_destroy(&(*bus)->busy_mutex);
+        for(uint8_t i=0;i<BUS_MUTEX_COND_COUNT;i++) {
+            pthread_cond_destroy(&(*bus)->busy_cond[i]);
+        }
         free(*bus);
         *bus = NULL;
     }

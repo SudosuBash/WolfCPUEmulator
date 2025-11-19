@@ -18,11 +18,11 @@ void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller);
         reset_bus((device)->bus_controller); \
     }while(0) \
 
-#define WAIT_FOR_BUS_WAKE_UP(device) \
+#define WAIT_FOR_BUS_WAKE_UP_COMMON_DEVICE(device) \
     do { \
         pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
         while (!((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address))  { \
-            pthread_cond_wait(&(device)->bus_controller->busy_cond,&(device)->bus_controller->busy_mutex); \
+            pthread_cond_wait(&(device)->bus_controller->busy_cond[0],&(device)->bus_controller->busy_mutex); \
         } \
         pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);   \
     } while(0);

@@ -36,10 +36,13 @@ uint8_t exec_cmd(int argc,char** argv) {
         return trigger_command("-help","help");
     }
     uint8_t status = 0;
-    for(int i=0;i<argc/2;i++) {
+    for(int i=1;i<(argc+1)/2;i+=2) {
         status = trigger_command(argv[i],argv[i+1]);
-        if(status != 0)
+        if(status != 0) {
+            printf("Emulator exited.");
             return status;
+        }
+
     }
     return 0;
 }

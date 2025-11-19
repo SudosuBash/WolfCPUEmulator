@@ -10,7 +10,7 @@ void execute(WOLF_CPU* cpu) {
     uint8_t icode = data.icode;
     WCPUExecuteResult res = {0};
     if(!data.noexception) 
-        goto CPU_EXEC_END_STATUS;
+        goto CPU_EXEC_END_STATUS; 
     res.noexception = data.noexception;
     res.valB = data.valB;
     res.valC = data.valC;

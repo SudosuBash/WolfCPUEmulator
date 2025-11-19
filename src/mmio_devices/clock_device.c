@@ -52,14 +52,12 @@ static void read_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,uint8_t be) {
 static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_MMIO_CLOCK_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_CLOCK_DEVICE,bus_device);
-
     LOOP_CMP_IF_WRITE_TO_REG(device);
-    
-    pthread_rwlock_wrlock(&(dev->device_rwlock));
-    usleep(30000+dev->regs[CLOCK_DEVICE_WAIT_DELTA] * 100); //最简单的时间中断
-    irq_controller->trigger_fn(irq_controller,device);
+
     if(dev->regs[CLOCK_DEVICE_OPEN_ADDR]) {
-        
+        pthread_rwlock_wrlock(&(dev->device_rwlock));
+        usleep(10+dev->regs[CLOCK_DEVICE_WAIT_DELTA] * 100); //最简单的时间中断
+        irq_controller->trigger_fn(irq_controller,device);
     } else {
         usleep(10000);
     }

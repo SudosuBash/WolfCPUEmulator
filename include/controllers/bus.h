@@ -17,6 +17,8 @@
 #define BUS_RW_WRITE 0x1
 
 #define BUS_WAIT_DELTA 100
+#define BUS_MUTEX_COND_COUNT 3
+//pthread锁数量
 typedef struct {
     uint32_t data;
     uint8_t be:4;
@@ -43,10 +45,11 @@ struct WOLF_CPU_BUS_CONTROLLER {
     WOLF_CPU_BUS_DEVICE* devices[MAX_BUS_DEVICE];
     bus_send_data_fn send_data;
     bus_recv_data_fn recv_data;
+
     pthread_mutex_t device_request_mutex;
     pthread_cond_t device_request_mutex_cond; //等待反馈
 
-    pthread_cond_t busy_cond;
+    pthread_cond_t busy_cond[BUS_MUTEX_COND_COUNT];
     pthread_mutex_t busy_mutex;
 };
 

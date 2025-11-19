@@ -1,99 +1,13 @@
 #include <controllers/mmu_controller.h>
 #include <cpu.h>
+#include <stdio.h>
+#include <bios_loader/bios.h>
 typedef struct {
     uint32_t addr;
     uint8_t stat:4;
     uint8_t cache_open:1;
 } WOLF_PADDR_GET;
-
-static const uint32_t bios_code[512 / 4] = {
-    0x0210ffff,
-    0x06000010,
-
-    0x02100200,
-    0x02284800,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-    
-    0x02100200,
-    0x02286500,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-    
-    0x02100200,
-    0x02286c00,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02286c00,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02286f00,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02282c00,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02285700,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02286F00,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02287200,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02286C00,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02286400,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000,
-
-    0x02100200,
-    0x02282100,
-    0x8202A000,
-    0x02100000,
-    0x02280100,
-    0x8202a000
-};
+extern BIOS_FILE bf;
 
 WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
     WOLF_PADDR_GET res = {0};
@@ -274,10 +188,17 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         uint32_t data = controller->regs[pos_addr >> 2];
         res1.data = controller->regs[pos_addr >> 2];
     } else {
-//还没有实现对应逻辑，为了能够执行，暂时先用临时一个uint8_t数组代替
-        res1.data = bios_code[(paddr.addr - BASE_BIOS_ADDR) >>2];
-    }
+        if(!IS_IN_KERN_MODE(cpu)) {
+            res1.stat = BCR_RAM_ERR_ACCESS_DENIED;
+            return res1;
+        }
 
+        uint16_t relaAddr = (paddr.addr - BASE_BIOS_ADDR);
+        res1.data = (bf.file[relaAddr] << 24) | (bf.file[relaAddr+1] << 16) | (bf.file[relaAddr+2] << 8) | (bf.file[relaAddr+3]);
+        
+//还没有实现对应逻辑，为了能够执行，暂时先用临时一个uint8_t数组代替
+        // res1.data = bios_code[(paddr.addr - BASE_BIOS_ADDR) >>2];
+    }
     return res1;
 }
 

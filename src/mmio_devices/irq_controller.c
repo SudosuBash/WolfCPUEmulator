@@ -8,16 +8,19 @@
 #include <controllers/ecall.h>
 #include <unistd.h>
 
+//是这样的，我定义总线存在好几个条件变量，第二个专门处理irq相关的请求
+//pthread不能同时处理两个条件变量的或(真的让我吐血)，只能先这样子解决一下
 #define WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device) \
     do { \
         pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
         while ( \
             !(((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address) \
             || ((controller)->external_irq_req)))  { \
-            pthread_cond_wait(&(device)->bus_controller->busy_cond,&(device)->bus_controller->busy_mutex); \
+            pthread_cond_wait(&(device)->bus_controller->busy_cond[1],&(device)->bus_controller->busy_mutex); \
         } \
-        pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);   \
+        pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);  \
     } while(0);
+
 #define GET_64_CLEAR_FLAG(num) (0xffffffffffffffff ^ (1 << (num)))
 #define GET_64_SET_FLAG(num) (1 << (num))
 
@@ -70,10 +73,10 @@ void irq_trigger(WOLF_IRQ_CONTROLLER* controller, WOLF_CPU_BUS_DEVICE* device) {
     controller->int_valid_flag |= GET_64_SET_FLAG(device->irq_number);
     
     //抢主线的锁
-    pthread_mutex_lock(&controller->bus_device->bus_controller->device_request_mutex);
+    pthread_mutex_lock(&controller->bus_device->bus_controller->busy_mutex);
     controller->external_irq_req = 1;
-    pthread_cond_signal(&controller->bus_device->bus_controller->device_request_mutex_cond);
-    pthread_mutex_unlock(&controller->bus_device->bus_controller->device_request_mutex);
+    pthread_cond_signal(&controller->bus_device->bus_controller->busy_cond[1]);
+    pthread_mutex_unlock(&controller->bus_device->bus_controller->busy_mutex);
 
     pthread_mutex_unlock(&(controller->device_rwlock));
 }
@@ -129,19 +132,10 @@ void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WOLF_CPU_BUS_CONTROLLER* bus_controller = device->bus_controller;
     
     uint32_t address = bus_controller->addr;
-    pthread_mutex_lock(&(device)->bus_controller->device_request_mutex);
-    while (
-        !(((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address)
-        || ((controller)->external_irq_req)))  {
-        pthread_cond_wait(&(device)->bus_controller->device_request_mutex_cond,&(device)->bus_controller->device_request_mutex);
-    }
-    pthread_mutex_unlock(&(device)->bus_controller->device_request_mutex); 
-    // WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device);
+    WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device);
     LOOP_CMP_IF_WRITE_TO_REG(device);
     //这个模拟不同时序，异步执行
-    // WOLF_CPU* cpu = get_parent_struct(&device->bus_controller,WOLF_CPU,bus);
-    //传个cpu进去得了
-
+    
     pthread_mutex_lock(&(controller->device_rwlock));
     uint8_t cmd = controller->regs[IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR];
     uint8_t irq_num = controller->regs[IRQ_CONTROLLER_DEVICE_OP_IRQNUM];
