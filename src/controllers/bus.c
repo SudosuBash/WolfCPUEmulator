@@ -19,12 +19,12 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
     //广播设备
     pthread_mutex_unlock(&bus_ctrl->busy_mutex);
 
-    pthread_mutex_lock(&bus_ctrl->mutex);
+    pthread_mutex_lock(&bus_ctrl->device_request_mutex);
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
     timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
-    int res = pthread_cond_timedwait(&bus_ctrl->mutex_cond,&bus_ctrl->mutex,&timeout);
-    pthread_mutex_unlock(&bus_ctrl->mutex);
+    int res = pthread_cond_timedwait(&bus_ctrl->device_request_mutex_cond,&bus_ctrl->device_request_mutex,&timeout);
+    pthread_mutex_unlock(&bus_ctrl->device_request_mutex);
 
 #ifdef _EMU_DEBUG
     fflush(stdout);
@@ -58,12 +58,12 @@ BUS_SEND_DATA bus_recv_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,B
         Sleep(1);
     }
     
-    pthread_mutex_lock(&bus_ctrl->mutex);
+    pthread_mutex_lock(&bus_ctrl->device_request_mutex);
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
     timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
-    int res = pthread_cond_timedwait(&bus_ctrl->mutex_cond,&bus_ctrl->mutex,&timeout);
-    pthread_mutex_unlock(&bus_ctrl->mutex);
+    int res = pthread_cond_timedwait(&bus_ctrl->device_request_mutex_cond,&bus_ctrl->device_request_mutex,&timeout);
+    pthread_mutex_unlock(&bus_ctrl->device_request_mutex);
 
     data.data = bus_ctrl->data_cmd_collection.data;
     data.status = bus_ctrl->data_cmd_collection.status;
@@ -83,9 +83,9 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
 
     controller->send_data = bus_send_data;
     controller->recv_data = bus_recv_data;
-    pthread_mutex_init(&(controller->mutex),NULL);
+    pthread_mutex_init(&(controller->device_request_mutex),NULL);
     pthread_mutex_init(&(controller->busy_mutex),NULL);
-    pthread_cond_init(&(controller->mutex_cond),NULL);
+    pthread_cond_init(&(controller->device_request_mutex_cond),NULL);
     pthread_cond_init(&(controller->busy_cond),NULL);
     //后续实现register_devices 
     return controller;
@@ -93,11 +93,10 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
 
 void free_bus(WOLF_CPU_BUS_CONTROLLER** bus) {
     if(*bus != NULL) {
-        pthread_mutex_destroy(&(*bus)->mutex);
+        pthread_mutex_destroy(&(*bus)->device_request_mutex);
         pthread_mutex_destroy(&(*bus)->busy_mutex);
-        pthread_cond_destroy(&(*bus)->mutex_cond);
+        pthread_cond_destroy(&(*bus)->device_request_mutex_cond);
         pthread_cond_destroy(&(*bus)->busy_cond);
-        
         free(*bus);
         *bus = NULL;
     }

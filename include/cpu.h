@@ -71,8 +71,6 @@
 //I类
 #define ICODE_RET 0b100100
 //R类
-#define ICODE_RIRE 0b100101
-//R类
 #define ICODE_RERE 0b100110
 //R类
 //lier: Load IRQ EXCEPTION Reason %r1
@@ -166,7 +164,6 @@
         && (icode) != ICODE_OCALL \
         && (icode) != ICODE_RET \
         && (icode) != ICODE_RBCR \
-        && (icode) != ICODE_RIRE \
         && (icode) != ICODE_RERE \
         && (icode) != ICODE_LEPV \
         && (icode) != ICODE_LIPV \
@@ -179,7 +176,6 @@
         (icode) == ICODE_POP || \
         (icode) == ICODE_ZWC || \
         (icode) == ICODE_RET || \
-        (icode) == ICODE_RIRE || \
         (icode) == ICODE_RERE || \
         IS_PRIVILEGE_INSTRUCTION(icode) \
         ) && !IS_RTYPE(type)) \

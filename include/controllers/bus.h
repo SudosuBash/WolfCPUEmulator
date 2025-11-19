@@ -43,8 +43,8 @@ struct WOLF_CPU_BUS_CONTROLLER {
     WOLF_CPU_BUS_DEVICE* devices[MAX_BUS_DEVICE];
     bus_send_data_fn send_data;
     bus_recv_data_fn recv_data;
-    pthread_mutex_t mutex;
-    pthread_cond_t mutex_cond; //等待反馈
+    pthread_mutex_t device_request_mutex;
+    pthread_cond_t device_request_mutex_cond; //等待反馈
 
     pthread_cond_t busy_cond;
     pthread_mutex_t busy_mutex;

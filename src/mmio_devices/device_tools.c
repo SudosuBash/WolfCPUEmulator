@@ -17,11 +17,11 @@ uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint3
         rel_addr1 >=max_reg_size ||
         rel_addr >= max_reg_size) {
 
-        pthread_mutex_lock(&controller->mutex);
+        pthread_mutex_lock(&controller->device_request_mutex);
 
         controller->data_cmd_collection.status = BUS_STATUS_ERROR;
-        pthread_cond_signal(&controller->mutex_cond);
-        pthread_mutex_unlock(&controller->mutex);
+        pthread_cond_signal(&controller->device_request_mutex_cond);
+        pthread_mutex_unlock(&controller->device_request_mutex);
         return STAT_UNKNOWN_ERROR;
     }
     uint8_t dat1 = Mux8(rd_0,0,regs[rel_addr]);
@@ -29,11 +29,11 @@ uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint3
     uint8_t dat3 = Mux8(rd_2,0,regs[rel_addr2]);
     uint8_t dat4 = Mux8(rd_3,0,regs[rel_addr3]);
     controller->data_cmd_collection.data = (dat4 << 24) | (dat3 << 16) | (dat2 << 8) | (dat1);
-    pthread_mutex_lock(&controller->mutex);
+    pthread_mutex_lock(&controller->device_request_mutex);
 
     controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;
-    pthread_cond_signal(&controller->mutex_cond);
-    pthread_mutex_unlock(&controller->mutex);
+    pthread_cond_signal(&controller->device_request_mutex_cond);
+    pthread_mutex_unlock(&controller->device_request_mutex);
     return STAT_SUCCESS;
 }
 
@@ -55,10 +55,10 @@ uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint
         rel_addr1 >= max_reg_size ||
         rel_addr >= max_reg_size) {
 
-        pthread_mutex_lock(&controller->mutex);
+        pthread_mutex_lock(&controller->device_request_mutex);
         controller->data_cmd_collection.status = BUS_STATUS_ERROR;
-        pthread_cond_signal(&controller->mutex_cond);
-        pthread_mutex_unlock(&controller->mutex);
+        pthread_cond_signal(&controller->device_request_mutex_cond);
+        pthread_mutex_unlock(&controller->device_request_mutex);
         return STAT_UNKNOWN_ERROR;
     }
 
@@ -66,11 +66,11 @@ uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint
     regs[rel_addr1] = Mux8(wri_1,regs[rel_addr1], GET_DATA_1(data));
     regs[rel_addr2] = Mux8(wri_2,regs[rel_addr2], GET_DATA_2(data));
     regs[rel_addr3] = Mux8(wri_3,regs[rel_addr3], GET_DATA_3(data));
-    pthread_mutex_lock(&controller->mutex);
+    pthread_mutex_lock(&controller->device_request_mutex);
 
     controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;
-    pthread_cond_signal(&controller->mutex_cond);
-    pthread_mutex_unlock(&controller->mutex);
+    pthread_cond_signal(&controller->device_request_mutex_cond);
+    pthread_mutex_unlock(&controller->device_request_mutex);
     return STAT_SUCCESS;
 }
 

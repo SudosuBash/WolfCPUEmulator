@@ -9,7 +9,7 @@ uint64_t clk = 0;
 
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
-        // break_execution(cpu);
+        break_execution(cpu);
         pthread_mutex_lock(&cpu->clock_execution);
         fetch_data(cpu);
         access_check(cpu);
@@ -19,8 +19,8 @@ void start_cpu(WOLF_CPU *cpu) {
         memory(cpu);
         writeback(cpu);
         update_PC(cpu);
+        cpu->ecall_controller->irq_caller(&cpu->ecall_controller);
         clk += 1;
-        usleep(1);
         pthread_mutex_unlock(&cpu->clock_execution);
     }
 }

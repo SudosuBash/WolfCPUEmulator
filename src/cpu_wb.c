@@ -43,8 +43,7 @@ void writeback(WOLF_CPU* cpu) {
             write_reg_val(cpu,result.destReg, result.valB);
             break;
         //4个指令全部传送valB
-        case ICODE_RERE: 
-        case ICODE_RIRE:
+        case ICODE_RERE:
         case ICODE_ECALL:
         case ICODE_OCALL:
         case ICODE_PUSH:

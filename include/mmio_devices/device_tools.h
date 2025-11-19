@@ -11,19 +11,29 @@ void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller);
 
 #define PROCESS_DEVICE_REGISTER_WRITING(device) \
     do { \
-        WOLF_CPU_BUS_CONTROLLER* bus_controller = (device)->bus_controller;  \
+        if((device)->bus_controller->data_cmd_collection.read_write == BUS_RW_READ) \
+            read_reg(pdevice,(device)->bus_controller->addr,(device)->bus_controller->data_cmd_collection.be); \
+        else if((device)->bus_controller->data_cmd_collection.read_write == BUS_RW_WRITE) \
+            write_reg(pdevice,(device)->bus_controller->addr,(device)->bus_controller->data_cmd_collection); \
+        reset_bus((device)->bus_controller); \
+    }while(0) \
+
+#define WAIT_FOR_BUS_WAKE_UP(device) \
+    do { \
         pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
-        while (!(bus_controller->addr < (device)->base_address + device->need_space && bus_controller->addr >= (device)->base_address))  { \
+        while (!((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address))  { \
             pthread_cond_wait(&(device)->bus_controller->busy_cond,&(device)->bus_controller->busy_mutex); \
         } \
         pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);   \
-        uint32_t address = bus_controller->addr; \
-        if(bus_controller->data_cmd_collection.read_write == BUS_RW_READ) \
-            read_reg(pdevice,address,bus_controller->data_cmd_collection.be); \
-        else if(bus_controller->data_cmd_collection.read_write == BUS_RW_WRITE) \
-            write_reg(pdevice,address,bus_controller->data_cmd_collection); \
-        reset_bus(bus_controller); \
-    }while(0) \
+    } while(0);
+
+    
+#define LOOP_CMP_IF_WRITE_TO_REG(device) \
+    do {\
+        if((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address)  { \
+            PROCESS_DEVICE_REGISTER_WRITING(device); \
+        } \
+    } while(0)
 
 #define INIT_BUS_DEVICE(bus_device,pname,pvendor,controller,pvendor_id,pneed_space,pstart_func,prd_reg_func,pwr_reg_func) \
     do { \

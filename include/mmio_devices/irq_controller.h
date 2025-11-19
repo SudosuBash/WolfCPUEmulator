@@ -57,6 +57,8 @@ struct WOLF_IRQ_CONTROLLER {
     irq_trigger_fn trigger_fn;    //预留一个硬件接口,对中断作请求
     INTERRUPT_DESC registered_interrupts[IRQ_INTERRUPTS_SUM]; //64个
     uint64_t int_valid_flag;
+    
+    uint8_t external_irq_req;
 };
 PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller,WOLF_CPU* cpu_instance);
 void destroy_irq_device(PWOLF_IRQ_CONTROLLER* pirq_device);

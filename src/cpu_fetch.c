@@ -39,8 +39,6 @@ static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
     uint8_t regB3 = CPU_REG_RSP;
     uint8_t icodeH = (icode == ICODE_RERE);
     uint8_t regB8 = CPU_REG_ECALL_REASON;
-    uint8_t icodeI = (icode == ICODE_RIRE);
-    uint8_t regB9 = CPU_REG_IRQ_REASON;
 
         
     uint8_t icodeJ = (icode == ICODE_ECALL);
@@ -52,7 +50,6 @@ static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
         Through8(icodeA,regA) |
         Through8(icodeC,regB3) |
         Through8(icodeH,regB8) |
-        Through8(icodeI,regB9) |
         Through8(icodeJ,regB10) |
         Through8(icodeK,regB11);
     //以上为 R 类指令的解码器
@@ -93,7 +90,6 @@ static inline uint8_t getLRegisterA(uint8_t icode,uint32_t data,uint8_t ExFlag,u
       (icode == ICODE_ALU) || 
       (icode == ICODE_MLMR) ||
       (icode == ICODE_RBCR) ||
-      (icode == ICODE_RIRE) ||
       (icode == ICODE_RERE) ||
       (icode == ICODE_ZWC) ||
       (icode == ICODE_PUSH) ||

@@ -6,7 +6,18 @@
 #include <cpu.h>
 #include <pthread.h>
 #include <controllers/ecall.h>
+#include <unistd.h>
 
+#define WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device) \
+    do { \
+        pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
+        while ( \
+            !(((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address) \
+            || ((controller)->external_irq_req)))  { \
+            pthread_cond_wait(&(device)->bus_controller->busy_cond,&(device)->bus_controller->busy_mutex); \
+        } \
+        pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);   \
+    } while(0);
 #define GET_64_CLEAR_FLAG(num) (0xffffffffffffffff ^ (1 << (num)))
 #define GET_64_SET_FLAG(num) (1 << (num))
 
@@ -16,6 +27,8 @@ static const uint8_t need_space = IRQ_CONTROLLER_DEVICE_REGS;
 static const uint16_t device_id = 0x1003;
 
 static WOLF_CPU* cpu;
+
+
 static void write_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,BUS_SEND_DATA data) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_IRQ_CONTROLLER* dev = get_parent_struct(pdevice,WOLF_IRQ_CONTROLLER, bus_device);
@@ -55,6 +68,13 @@ void irq_trigger(WOLF_IRQ_CONTROLLER* controller, WOLF_CPU_BUS_DEVICE* device) {
 #endif
     controller->registered_interrupts[device->irq_number].status = IRQ_STATUS_SUSPEND; //改为挂起
     controller->int_valid_flag |= GET_64_SET_FLAG(device->irq_number);
+    
+    //抢主线的锁
+    pthread_mutex_lock(&controller->bus_device->bus_controller->device_request_mutex);
+    controller->external_irq_req = 1;
+    pthread_cond_signal(&controller->bus_device->bus_controller->device_request_mutex_cond);
+    pthread_mutex_unlock(&controller->bus_device->bus_controller->device_request_mutex);
+
     pthread_mutex_unlock(&(controller->device_rwlock));
 }
 
@@ -109,8 +129,15 @@ void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WOLF_CPU_BUS_CONTROLLER* bus_controller = device->bus_controller;
     
     uint32_t address = bus_controller->addr;
-
-    PROCESS_DEVICE_REGISTER_WRITING(device);
+    pthread_mutex_lock(&(device)->bus_controller->device_request_mutex);
+    while (
+        !(((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address)
+        || ((controller)->external_irq_req)))  {
+        pthread_cond_wait(&(device)->bus_controller->device_request_mutex_cond,&(device)->bus_controller->device_request_mutex);
+    }
+    pthread_mutex_unlock(&(device)->bus_controller->device_request_mutex); 
+    // WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device);
+    LOOP_CMP_IF_WRITE_TO_REG(device);
     //这个模拟不同时序，异步执行
     // WOLF_CPU* cpu = get_parent_struct(&device->bus_controller,WOLF_CPU,bus);
     //传个cpu进去得了
@@ -160,14 +187,16 @@ void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
             break;
     }
     if(controller->int_valid_flag) {
-        cpu->ecall_controller->irq_caller(&cpu->ecall_controller,IREASON_FOR_EXTERNAL_IRQ);
+        cpu->ecall_controller->external_irq = 1;
     }
+    controller->external_irq_req = 0;
     controller->regs[IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR] = 0;
     pthread_mutex_unlock(&(controller->device_rwlock));
 }
 
 PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller,WOLF_CPU* cpu_instance) {
     cpu = cpu_instance;
+    
     WOLF_CPU_BUS_DEVICE* bus_device = (WOLF_CPU_BUS_DEVICE*)calloc(1,sizeof(WOLF_CPU_BUS_DEVICE));
     WOLF_IRQ_CONTROLLER* irq_controller = (WOLF_IRQ_CONTROLLER*) calloc(1,sizeof(WOLF_IRQ_CONTROLLER));
     if (bus_device == NULL || irq_controller == NULL) return NULL;
@@ -176,17 +205,10 @@ PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller,WO
 
     INIT_BUS_DEVICE(bus_device,device_name,vendor_name,controller,device_id,need_space,device_start,read_reg,write_reg);
 
-    bus_device->bus_controller = controller;
     irq_controller->bus_device = bus_device;
     irq_controller->trigger_fn = irq_trigger;
-    
-    strncpy(bus_device->name,device_name,DEVICE_NAME_STR_MAX);
-    strncpy(bus_device->vendor,vendor_name,DEVICE_VENDOR_STR_MAX);
-    bus_device->vendor_id = device_id;
-    bus_device->need_space = need_space;
-    bus_device->wr_reg_func = write_reg;
-    bus_device->rd_reg_func = read_reg;
-    bus_device->start_func = device_start;
+
+    irq_controller->external_irq_req = 0;
 #ifdef _EMU_MMIO_DEBUG
     bus_device->base_address = BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR;
 #endif

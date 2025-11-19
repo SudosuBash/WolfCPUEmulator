@@ -57,7 +57,8 @@ static void device_output(WOLF_MMIO_STDO_DEVICE* device,uint8_t write_buf) {
 static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE,bus_device);
-    
+
+    WAIT_FOR_BUS_WAKE_UP(device);
     PROCESS_DEVICE_REGISTER_WRITING(device);
 
     pthread_rwlock_wrlock(&(dev->device_rwlock));
