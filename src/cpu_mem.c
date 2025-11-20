@@ -23,6 +23,7 @@ void memory(WOLF_CPU* cpu) {
     mem_res.ExFunc = res.ExFunc;
     mem_res.valB = res.valB;
     mem_res.valP = res.valP;
+    mem_res.ExCond = res.ExCond;
     uint32_t wr_data = Through32((
         icode == ICODE_PUSH
     ),res.valC) | Through32(

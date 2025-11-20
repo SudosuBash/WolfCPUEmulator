@@ -27,7 +27,7 @@ void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
 
     BUS_SEND_DATA data = {
         .be = 0b0001,
-        .data = IRQ_CMD_PROCESS_OK
+        .data = IRQ_CMD_PROCESSING
     };
     cpu->bus->send_data(&cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
     BUS_SEND_DATA recv_val = cpu->bus->recv_data(&cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);

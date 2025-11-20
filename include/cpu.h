@@ -117,6 +117,22 @@
 #define ALU_FUN_CODE_DIV 0x7
 #define ALU_FUN_CODE_NOT 0x8
 
+#define JMP_EXCOND_JMP 0
+#define JMP_EXCOND_EQ 1
+#define JMP_EXCOND_G 2
+#define JMP_EXCOND_S 3
+#define JMP_EXCOND_A 4
+#define JMP_EXCOND_B 5
+#define JMP_EXCOND_NE 6
+
+#define IS_EXCOND_JMP(cond) (cond) == JMP_EXCOND_JMP
+#define IS_EXCOND_EQ(cond) (cond) == JMP_EXCOND_EQ
+#define IS_EXCOMD_G(cond) (cond) == JMP_EXCOND_G
+#define IS_EXCOND_S(cond) (cond) == JMP_EXCOND_S
+#define IS_EXCOND_A(cond) (cond) == JMP_EXCOND_A
+#define IS_EXCOND_B(cond) (cond) == JMP_EXCOND_B
+#define IS_EXCOND_NE(cond) (cond) == JMP_EXCOND_NE
+
 #define ALU_EXFUNC_BITS 4
 
 #define ALU_EXFLAG_EXALU_MASK 0b0
@@ -253,6 +269,7 @@ typedef struct {
     uint32_t valC;
     uint8_t noexception:1;
     uint8_t ExFunc:4;
+    uint8_t ExCond:4;
     uint32_t valP;
 } WCPUWBResult;
 

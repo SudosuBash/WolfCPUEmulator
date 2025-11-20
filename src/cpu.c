@@ -5,6 +5,7 @@
 #include <debug/debug.h>
 #include <mmio_devices/device_init.h>
 #include <unistd.h>
+#include <bios_loader/bios.h>
 uint64_t clk = 0;
 
 void start_cpu(WOLF_CPU *cpu) {
@@ -28,6 +29,7 @@ void start_cpu(WOLF_CPU *cpu) {
 void init_env() {
     WOLF_CPU* cpu = init_cpu();
     init_devices(cpu);
+    load_bios();
     start_cpu(cpu);
     free_cpu(&cpu);
 }

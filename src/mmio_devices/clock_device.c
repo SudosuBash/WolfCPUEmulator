@@ -54,11 +54,12 @@ static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WOLF_MMIO_CLOCK_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_CLOCK_DEVICE,bus_device);
     LOOP_CMP_IF_WRITE_TO_REG(device);
 
-    if(dev->regs[CLOCK_DEVICE_OPEN_ADDR]) {
-        pthread_rwlock_wrlock(&(dev->device_rwlock));
+    pthread_rwlock_wrlock(&(dev->device_rwlock));
         usleep(10+dev->regs[CLOCK_DEVICE_WAIT_DELTA] * 100); //最简单的时间中断
         irq_controller->trigger_fn(irq_controller,device);
-    } else {
+    
+    if(dev->regs[CLOCK_DEVICE_OPEN_ADDR]) {
+        } else {
         usleep(10000);
     }
     pthread_rwlock_unlock(&(dev->device_rwlock));
@@ -76,6 +77,7 @@ PWOLF_CPU_BUS_DEVICE* init_clock_device(WOLF_CPU_BUS_CONTROLLER* controller, WOL
     clock_device->bus_device = bus_device;
 #ifdef _EMU_MMIO_DEBUG
     bus_device->base_address = 0xffff00F0;
+    bus_device->irq_number = 0x7;
 #endif
     pthread_rwlock_init(&(clock_device->device_rwlock),NULL);
     pthread_mutex_init(&(clock_device->stdio_lock),NULL);

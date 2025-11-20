@@ -63,12 +63,14 @@ void irq_trigger(WOLF_IRQ_CONTROLLER* controller, WOLF_CPU_BUS_DEVICE* device) {
     pthread_mutex_lock(&(controller->device_rwlock));
     //加速处理，默认一切参数合法，否则太慢了
     uint8_t device_irq_num = device->irq_number;
-#ifndef _EMU_IRQ_TEST_DEBUG
     if(! controller->registered_interrupts[device->irq_number].enabled) {
         pthread_mutex_unlock(&(controller->device_rwlock)); 
         return; //禁止中断直接返回
     }
-#endif
+
+    if(device->vendor_id == 0x1004) {
+        controller->registered_interrupts[device->irq_number].prio = 1;
+    }
     controller->registered_interrupts[device->irq_number].status = IRQ_STATUS_SUSPEND; //改为挂起
     controller->int_valid_flag |= GET_64_SET_FLAG(device->irq_number);
     
@@ -173,7 +175,7 @@ void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
             } //开始仲裁
             if(min_index != -1) { //不用按位的原因还是加速
         		controller->registered_interrupts[min_index].status = IRQ_STATUS_PROCESSING;
-        		controller->regs[IRQ_CONTROLLER_DEVICE_SUBDEVICE_NUM_REG] =  controller->registered_interrupts[min_index].irq_num;
+        		controller->regs[IRQ_CONTROLLER_DEVICE_OP_IRQNUM] =  controller->registered_interrupts[min_index].irq_num;
                 controller->regs[IRQ_CONTROLLER_DEVICE_STAT_REG_ADDR] = 0;
             } else {
                 controller->regs[IRQ_CONTROLLER_DEVICE_STAT_REG_ADDR] = 1;
@@ -206,9 +208,15 @@ PWOLF_CPU_BUS_DEVICE* init_irq_controller(WOLF_CPU_BUS_CONTROLLER* controller,WO
 #ifdef _EMU_MMIO_DEBUG
     bus_device->base_address = BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR;
 #endif
+
+
     for(int i = 0; i < IRQ_INTERRUPTS_SUM; i++) {
         irq_controller->registered_interrupts[i].irq_num = i;
+#ifdef _EMU_IRQ_TEST_DEBUG
+        irq_controller->registered_interrupts[i].enabled = 1;
+#else
         irq_controller->registered_interrupts[i].enabled = 0; 
+#endif
         irq_controller->registered_interrupts[i].status = IRQ_STATUS_OKAY;
         irq_controller->registered_interrupts[i].ignored = IRQ_NOT_IGNORED;
         irq_controller->registered_interrupts[i].prio = IRQ_MAX_PRIO; 

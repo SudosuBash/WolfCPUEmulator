@@ -7,5 +7,5 @@ typedef struct {
     uint8_t* file;
 } BIOS_FILE;
 
-
+void load_bios();
 #endif

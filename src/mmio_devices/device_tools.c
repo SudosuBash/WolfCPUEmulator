@@ -75,7 +75,7 @@ uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint
 }
 
 void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller) {
-    bus_controller->data_cmd_collection.be = 0;
-    bus_controller->data_cmd_collection.data = 0;//重置
+    // bus_controller->data_cmd_collection.be = 0;
+    // bus_controller->data_cmd_collection.data = 0;//重置
     bus_controller->addr = 0;
 }
