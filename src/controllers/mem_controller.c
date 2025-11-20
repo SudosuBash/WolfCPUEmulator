@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <ram/ram_eff.h>
 #include <memory.h>
+#include <tools.h>
 #define RAM_BLOCK_RECT_LOW_MASK (1<<(RAM_BLOCK_MAX_POSITION + RAM_BLOCK_MAX_POSITION))-1
 #define RAM_BLOCK_RECT_HIGH_MASK (RAM_BLOCK_RECT_LOW_MASK ^ 0xffffffff)
 
@@ -46,14 +47,15 @@ RAM_RD_STATUS rd_memory_4b(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8
     return stat;
 }
 
-RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint32_t value,uint8_t be) {
+RAM_WR_STATUS wr_mem(PWOLF_MEM_CONTROLLER* controller,uint32_t paddr,uint8_t value[4],uint8_t be) {
     RAM_WR_STATUS stat = {0};
 
     RAM_IN_ARGS input = {0};
     input.opcode = RAM_IN_OPCODE_WR;
     input.opbytes = RAM_IN_OPBYTES_4BYTE;
     input.paddr = paddr;
-    input.val4bIn = value;
+    
+    COPY_BYTE_4_ARRAY(input.val4bIn,value);
 
     RAM_OPERATOR_RESULT result = (*controller)->ram_unit->operatorFunc(&(*controller)->ram_unit,input);
 

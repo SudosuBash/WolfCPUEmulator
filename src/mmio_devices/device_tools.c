@@ -1,6 +1,7 @@
 #include <mmio_devices/device_tools.h>
 #include <logics/logic_alg.h>
 #include <stdio.h>
+#include <tools.h>
 uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint32_t base_address, uint8_t max_reg_size, uint8_t* regs) {
     uint8_t be = controller->data_cmd_collection.be;
     uint8_t rd_0 = (be & 1) == 1;
@@ -24,11 +25,8 @@ uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint3
         pthread_mutex_unlock(&controller->device_request_mutex);
         return STAT_UNKNOWN_ERROR;
     }
-    uint8_t dat1 = Mux8(rd_0,0,regs[rel_addr]);
-    uint8_t dat2 = Mux8(rd_1,0,regs[rel_addr1]);
-    uint8_t dat3 = Mux8(rd_2,0,regs[rel_addr2]);
-    uint8_t dat4 = Mux8(rd_3,0,regs[rel_addr3]);
-    controller->data_cmd_collection.data = (dat4 << 24) | (dat3 << 16) | (dat2 << 8) | (dat1);
+    uint8_t dat_arr[4] = {Mux8(rd_0,0,regs[rel_addr]),Mux8(rd_1,0,regs[rel_addr1]),Mux8(rd_2,0,regs[rel_addr2]),Mux8(rd_3,0,regs[rel_addr3])};
+    COPY_BYTE_4_ARRAY(controller->data_cmd_collection.data,dat_arr);
     pthread_mutex_lock(&controller->device_request_mutex);
 
     controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;
@@ -39,7 +37,7 @@ uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint3
 
 uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint8_t base_address,uint8_t max_reg_size, uint8_t* regs) {
     uint8_t be = controller->data_cmd_collection.be;
-    uint32_t data = controller->data_cmd_collection.data;
+    uint32_t data = GET_INT_FROM_4_BYTES(controller->data_cmd_collection.data);
 
     uint8_t wri_0 = (be & 1) == 1;
     uint8_t wri_1 = (be >> 1) & 1;

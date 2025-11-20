@@ -65,6 +65,7 @@ void writeback(WOLF_CPU* cpu) {
     res.ExFunc = result.ExFunc;
     res.irtype = result.irtype;
     res.valP = result.valP;
+    res.ExCond = result.ExCond;
 WB_ERR_END:
     cpu->wb_result_reg = res;
 }

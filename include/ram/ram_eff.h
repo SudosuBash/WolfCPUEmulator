@@ -24,10 +24,11 @@
 
 #define RAM_IN_OPBYTES_128BYTE 0
 #define RAM_IN_OPBYTES_4BYTE 1
+
 //512 MB
 typedef struct {
     uint8_t status_flag:1; //就一位，1代表内存超限
-    uint32_t data[L2_SIZE / sizeof(uint32_t)];
+    uint8_t data[L2_SIZE];
 } RAM_OPERATOR_RESULT;
 
 typedef struct {
@@ -35,14 +36,15 @@ typedef struct {
     uint8_t opbytes:1; 
     //若是WRITE操作,此位忽略
     uint32_t paddr;
-    uint32_t val4bIn;
+    uint8_t val4bIn[4];
+    uint8_t be;
 } RAM_IN_ARGS;
 
 typedef struct RAM_INTERFACE_UNIT RAM_INTERFACE_UNIT,*PRAM_INTERFACE_UNIT;
 typedef RAM_OPERATOR_RESULT (*ram_operator_func)(PRAM_INTERFACE_UNIT* unit,RAM_IN_ARGS input);
 
 struct RAM_INTERFACE_UNIT {
-    uint32_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM];
+    uint8_t* ram_page_table[RAM_PDE_ITEM][RAM_PTE_ITEM];
     //就占2MB,挺小的
     //需要的时候再分配
     ram_operator_func operatorFunc;

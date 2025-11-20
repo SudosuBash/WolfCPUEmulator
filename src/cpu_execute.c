@@ -85,7 +85,8 @@ void execute(WOLF_CPU* cpu) {
             break;
         }
         case ICODE_JMP: {
-            res.valC = data.valA + data.valC;
+            int16_t f2 = (int16_t)(data.valC & 0xffff);
+            res.valC = data.valA + (int16_t)(data.valC & 0xffff);
             break;
         }
         case ICODE_RET: {
@@ -98,7 +99,7 @@ void execute(WOLF_CPU* cpu) {
         }
         case ICODE_OCALL:
             res.valB = data.valB - 4; //WB写回
-            res.valC = data.valA + data.valC;
+            res.valC = data.valA + (int16_t)(data.valC & 0xffff);
             break;
         case ICODE_PUSHF:
         case ICODE_PUSH:

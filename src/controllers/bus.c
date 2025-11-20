@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <global.h>
-#include <windows.h>
+#include <tools.h>
 #include <unistd.h>
 
 uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
@@ -62,8 +62,7 @@ BUS_SEND_DATA bus_recv_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,B
     int res = pthread_cond_timedwait(&bus_ctrl->device_request_mutex_cond,&bus_ctrl->device_request_mutex,&timeout);
     pthread_mutex_unlock(&bus_ctrl->device_request_mutex);
 
-
-    data.data = bus_ctrl->data_cmd_collection.data;
+    COPY_BYTE_4_ARRAY(data.data,bus_ctrl->data_cmd_collection.data);
     data.status = bus_ctrl->data_cmd_collection.status;
 
     if(bus_ctrl->data_cmd_collection.status == BUS_STATUS_PENDING) {

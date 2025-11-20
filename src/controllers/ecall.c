@@ -4,7 +4,7 @@
 #include <mmio_devices/irq_controller.h>
 #include <pthread.h>
 #include <stdlib.h>
-
+#include <tools.h>
 //同步时序
 void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
@@ -27,11 +27,11 @@ void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
 
     BUS_SEND_DATA data = {
         .be = 0b0001,
-        .data = IRQ_CMD_PROCESSING
+        .data = {IRQ_CMD_PROCESSING,0,0,0}
     };
     cpu->bus->send_data(&cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
     BUS_SEND_DATA recv_val = cpu->bus->recv_data(&cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
-    uint8_t irqcode = recv_val.data & 0xff; 
+    uint8_t irqcode = GET_INT_FROM_4_BYTES(recv_val.data) & 0xff; 
     
     uint32_t base_addr = cpu->irq_regs.mpc + irqcode * ECALL_SINGLE_ITEM_LENGTH;
     cpu->irq_regs.mep = cpu->pc;

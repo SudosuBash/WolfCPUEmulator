@@ -20,7 +20,7 @@
 #define BUS_MUTEX_COND_COUNT 3
 //pthread锁数量
 typedef struct {
-    uint32_t data;
+    uint8_t data[4];
     uint8_t be:4;
     uint8_t status:2;
     uint8_t read_write:1;

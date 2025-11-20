@@ -36,6 +36,10 @@
 #define GET_DATA_2(data) ((data) >> 16) & 0xff
 #define GET_DATA_3(data) ((data) >> 24)
 
+#define GET_DATA_BIT0(data) ((data) & 0x1)
+#define GET_DATA_BIT1(data) (((data) >> 1) & 0x1)
+#define GET_DATA_BIT2(data) (((data) >> 2) & 0x1)
+#define GET_DATA_BIT3(data) (((data) >> 3) & 0x1)
 #define BE_DATA(data) \
    (Through8((data)==0b1,1) | \
    Through8((data)==0b11,2) | \
@@ -56,11 +60,7 @@
    (Mux8(((be) >> 3) & 0x1,GET_DATA_3(origin), GET_DATA_3(dest)) << 24) \
 )
 //通过be获取对应的值
-#define BE_NOT_ALIGN4_GET(rest,be) (\
-   Through8((rest) == 0,be) | \
-   Through8((rest) == 1,0b0100) | \
-   Through8((rest) == 2, Through8((be) == 0b1100,0b0011) | Through8((be) == 0b1000,0b0010)) | \
-   Through8((rest) == 3, 0b0001))
+
 //这种直接打表了,作用: 获取非4字节对齐对应最接近的4字节对齐的地址的Be
 //例如: 地址0x2,访问2字节返回结果: 0b0011
 //地址0x2,访问1字节返回结果: 0b0010

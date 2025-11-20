@@ -161,7 +161,7 @@
 #define GET_SCR_PF_FLAG(flag) (((flag) >> SCR_PF_FLAG) & 1)
 #define GET_SCR_CF_FLAG(flag) (((flag) >> SCR_CF_FLAG) & 1)
 
-#define EXCOND_R1_ON(excond) ((excond) >> 3)
+#define EXCOND_R1_ON(excond) ((excond) >> 4)
 #define EXFLAG_R1_ON(exflag) ((exflag) >> 3)
 #define IS_ITYPE(val) ((val) ^ 1)
 #define IS_RTYPE(val) (val)

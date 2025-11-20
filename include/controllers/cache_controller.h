@@ -20,19 +20,19 @@ typedef struct {
 } CACHE_RD_STAT;
 
 typedef struct {
-    uint32_t offset[CACHE_ARR_SIZE(L1_SIZE, uint32_t)];
+    uint8_t offset[L1_SIZE];
     CACHE_RD_STAT stat;
     uint8_t relaAddr;
 }L1_CACHE_RD_GROUP_RES;
 
 typedef struct {
-    uint32_t offset[CACHE_ARR_SIZE(L2_SIZE, uint32_t)];
+    uint8_t offset[L1_SIZE];
     CACHE_RD_STAT stat;
     uint8_t relaAddr;
 }L2_CACHE_RD_GROUP_RES;
 
-typedef uint8_t (*LD_CACHE_FN_L1)(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_SIZE], uint32_t addr, uint32_t data[CACHE_ARR_SIZE(L1_SIZE, uint32_t)]);
-typedef uint8_t (*LD_CACHE_FN_L2)(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE], uint32_t addr, uint32_t data[CACHE_ARR_SIZE(L2_SIZE, uint32_t)]);
+typedef uint8_t (*LD_CACHE_FN_L1)(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_SIZE], uint32_t addr, uint8_t data[L1_SIZE]);
+typedef uint8_t (*LD_CACHE_FN_L2)(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE], uint32_t addr, uint8_t data[L2_SIZE]);
 
 typedef L1_CACHE_RD_GROUP_RES (*RD_CACHE_GROUPS_L1)(MACHINE_L1_CACHE_GROUP* group[L1_GROUP_SIZE],uint32_t addr);
 typedef L2_CACHE_RD_GROUP_RES (*RD_CACHE_GROUPS_L2)(MACHINE_L2_CACHE_GROUP* group[L2_GROUP_SIZE],uint32_t addr);

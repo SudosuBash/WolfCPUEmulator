@@ -35,14 +35,14 @@ typedef struct WOLF_CPU_MMU WOLF_CPU_MMU_CONTROLLER,*PWOLF_CPU_MMU_CONTROLLER;
 //思考再三，我决定去掉TLB的设计
 //TLB本意是当页表缓存，加速查表速度。但是问题是这个TLB反倒因为"C语言串行"的因素拖慢模拟器速度
 typedef struct {
-    uint32_t data;
+    uint8_t data[4];
     uint8_t be:4;
     uint8_t status:2;
 } MMU_DATA;
 
 typedef struct {
     uint8_t stat:4;
-    uint32_t data;
+    uint8_t data[4];
 } MMU_STATUS;
 
 typedef MMU_STATUS (*mmu_memory_rd)(PWOLF_CPU_MMU_CONTROLLER* mmu,uint32_t addr,uint8_t be);

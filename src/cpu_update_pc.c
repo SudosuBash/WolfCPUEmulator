@@ -7,7 +7,7 @@ void update_PC(WOLF_CPU* cpu) {
     uint8_t cond = (
         icode == ICODE_OCALL || 
         icode == ICODE_RET);
-    uint32_t excond = result.ExCond & 0b111;
+    uint32_t excond = result.ExCond & 0b1111;
     uint8_t val1 = 0;
         switch(result.ExCond) {    
             case JMP_EXCOND_JMP:
@@ -32,11 +32,12 @@ void update_PC(WOLF_CPU* cpu) {
                 val1 = !GET_SCR_ZF_FLAG(cpu->spe_regs.scr);
                 break;
         }
-    uint8_t valc = Through32(icode == ICODE_JMP && val1,result.valC) |
+
+        uint32_t valc = Through32(icode == ICODE_JMP && val1,result.valC) |
         Through32(icode == ICODE_JMP && !val1,result.valP);
         //JMP指令,val1为满足条件
     uint32_t updated_PC = valc |
         Through32(cond,result.valC) |
-        Through32(!cond,result.valP);
+        Through32(!cond && icode != ICODE_JMP,result.valP);
     cpu->pc = updated_PC;
 }

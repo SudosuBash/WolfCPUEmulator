@@ -1,12 +1,12 @@
 #include <controllers/ecall.h>
 #include <cpu.h>
-
+#include <tools.h>
 uint8_t regValid(uint8_t reg1) {
     return ! (reg1 > CPU_REG_IRQ_REASON);
 }
 
 static inline uint8_t getExCond(uint8_t type,uint8_t icode,uint32_t data) {
-    uint8_t val = Through8(icode == ICODE_JMP,(data >> 16) & 0b1111);
+    uint8_t val = Through8(icode == ICODE_JMP,(data >> 16) & 0b11111);
     //以上为 I 类指令的解码器
     return Through8(IS_ITYPE(type),val);
 }
@@ -183,7 +183,7 @@ void fetch_data(WOLF_CPU* cpu) {
         goto WCPU_FETCH_DATA_END;
     }
 
-    uint32_t fetch = mmu_res.data;
+    uint32_t fetch = GET_INT_FROM_4_BYTES_B(mmu_res.data);
     uint8_t type = fetch >> 31;
     uint8_t icode = (fetch >> 25) & 0b0111111;
     uint32_t data = fetch & 0x01ffffff;
