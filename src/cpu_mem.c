@@ -1,5 +1,5 @@
 #include <cpu.h>
-#include <tools.h>
+#include <tools/endian.h>
 void memory(WOLF_CPU* cpu) {
     WCPUExecuteResult res = cpu->ex_data_reg;
     WCPUMemResult mem_res = {0};
@@ -49,7 +49,7 @@ void memory(WOLF_CPU* cpu) {
                         icode == ICODE_MOV &&
                         ICODE_EXFLAG_MOV_MEM1(res.ExFlag)
                     ),res.valC);
-                MMU_DATA data = {.data = {SEP_INT_FOR_4_BYTES(res.valB)},.be = be};
+                MMU_DATA data = {.data = {SEP_INT_FOR_4_BYTES_L(res.valB)},.be = be};
                 stat = controller->wr_mmu(&cpu->mmu,addr1,data);
             } else if(ICODE_EXFLAG_MOV_MEM2(res.ExFlag)) {
                 uint32_t addr2 = Through32((
@@ -58,7 +58,7 @@ void memory(WOLF_CPU* cpu) {
                     ),res.valC);
                 //大端转换成小端，获得的小端转回来
                 stat =  controller->rd_mmu(&cpu->mmu,addr2,be);
-                mem_res.valC = GET_INT_FROM_4_BYTES(stat.data);
+                mem_res.valC = GET_INT_FROM_4_BYTES_L(stat.data);
             }
             if(stat.stat != BCR_RAM_ERR_OK) {
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat));
@@ -78,13 +78,13 @@ void memory(WOLF_CPU* cpu) {
                 mem_res.noexception = 0;
                 goto CPU_MEM_END_STATUS;
             }
-            mem_res.valC = GET_INT_FROM_4_BYTES(stat.data);
+            mem_res.valC = GET_INT_FROM_4_BYTES_L(stat.data);
             break;
         }
         case ICODE_PUSHF:
         case ICODE_PUSH:
         case ICODE_OCALL: {
-            MMU_DATA data = {.data = {SEP_INT_FOR_4_BYTES(wr_data)},.be = be,.status = 0};
+            MMU_DATA data = {.data = {SEP_INT_FOR_4_BYTES_L(wr_data)},.be = be,.status = 0};
             MMU_STATUS stat = controller->wr_mmu(&cpu->mmu,wr_addr,data);
             if(stat.stat != BCR_RAM_ERR_OK) {
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat));

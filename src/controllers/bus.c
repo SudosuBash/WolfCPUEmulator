@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <global.h>
-#include <tools.h>
+#include <tools/endian.h>
 #include <unistd.h>
 
 uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {

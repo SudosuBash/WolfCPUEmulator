@@ -4,7 +4,7 @@
 #include <mmio_devices/irq_controller.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include <tools.h>
+#include <tools/endian.h>
 //同步时序
 void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
@@ -31,7 +31,7 @@ void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     };
     cpu->bus->send_data(&cpu->bus, BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_FUNC_REG_ADDR, data);
     BUS_SEND_DATA recv_val = cpu->bus->recv_data(&cpu->bus,BUS_IRQ_CONTROLLER_DEVICE_BASE_ADDR + IRQ_CONTROLLER_DEVICE_OP_IRQNUM, data);
-    uint8_t irqcode = GET_INT_FROM_4_BYTES(recv_val.data) & 0xff; 
+    uint8_t irqcode = GET_INT_FROM_4_BYTES_L(recv_val.data) & 0xff; 
     
     uint32_t base_addr = cpu->irq_regs.mpc + irqcode * ECALL_SINGLE_ITEM_LENGTH;
     cpu->irq_regs.mep = cpu->pc;
@@ -48,7 +48,7 @@ void eret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     cpu->pc = cpu->ecall_regs.mpc + 4; //跳过当前指令
     cpu->ecall_regs.mep = 0;
     cpu->ecall_regs.mreason = 0;
-} 
+}
 void iret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     cpu->spe_regs.bcr &= (0b11111111 ^ BCR_IRQ_DISALLOW_MASK);

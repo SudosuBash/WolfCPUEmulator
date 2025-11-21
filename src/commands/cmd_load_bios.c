@@ -1,6 +1,6 @@
 
 #include <commands/commands.h>
-#include <tools.h>
+#include <tools/files.h>
 #include <bios_loader/bios.h>
 
 extern BIOS_FILE bf;

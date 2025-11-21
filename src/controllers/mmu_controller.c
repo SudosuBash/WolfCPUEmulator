@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <bios_loader/bios.h>
 
-#include <tools.h>
+#include <tools/endian.h>
 typedef struct {
     uint32_t addr;
     uint8_t stat:4;
@@ -25,7 +25,7 @@ WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
         RAM_RD_STATUS stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pde,0b1111);
         res.stat = BCR_RAM_ERR;
 
-        page_base_address = GET_INT_FROM_4_BYTES(stat.data.offset4);
+        page_base_address = GET_INT_FROM_4_BYTES_L(stat.data.offset4);
 
         //还得加权限管理，计算页表位置等，这个以后再写
         stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pte,0b1111);
@@ -86,6 +86,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
             res1.stat = BCR_RAM_ERR_REG_OUT_OF_RANGE;
             return res1;
         }
+        COPY_BYTE_4_ARRAY_WITH_BE(&controller->regs[pos_addr],data.data,data.be);
         // controller->regs[pos_addr] = DATA32_MASK_BE(controller->regs[pos_addr],data.data,
         //     BE_NOT_ALIGN4_GET(paddr.addr & 3,data.be));
         //写入对应的寄存器，但是实际上的话是这样的
@@ -94,7 +95,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         //获取到的be就是相对于pos_addr的be
 
         uint32_t cmd = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_CMD];
-        uint32_t device_num = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA];
+        uint32_t device_num = GET_INT_FROM_2_BYTES_L(&controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA]);
         if(device_num > MAX_BUS_DEVICE) return res1;
         //简化逻辑就不增加对外接口了，真实电路应该加在Bus加一个对外访问函数用于模拟对外接口
         controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA] = cpu->bus->devices[device_num]->vendor_id; 
@@ -104,19 +105,20 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         //更新设备的总线位置，读取对应的need_space
         switch(cmd) {
             case MMU_CONTROLLER_CMD_SET_BASE_ADDR: { //设置基地址
-                if(controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] >= BASE_MMIO_ADDR
-                && controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] < BASE_MMU_ADDR) {
-                    cpu->bus->devices[device_num]->base_address = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA];
+                uint32_t addr = GET_INT_FROM_4_BYTES_L(&controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA]);
+                if( addr >= BASE_MMIO_ADDR && addr < BASE_MMU_ADDR) {
+                    cpu->bus->devices[device_num]->base_address = addr;
                 }
                 break;
             }
             case MMU_CONTROLLER_CMD_SET_IRQNUM: { //设置中断号
-                cpu->bus->devices[device_num]->irq_number = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] & 0xff;
+                cpu->bus->devices[device_num]->irq_number = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA]; //第一个字节
                 //0~63位
                 break;
             }
         }
-        controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA] = 0; 
+        uint8_t ZERO[4] = {0,0,0,0};
+        COPY_BYTE_4_ARRAY(&controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA],ZERO);
         //更新base_address
         //一次设备枚举包含两个阶段，一个是更新设备总线位置，一个是更新设备的bar
 
@@ -189,7 +191,8 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
             res1.stat = BCR_RAM_ERR_ALIGN;
             return res1;
         }
-        uint32_t data = controller->regs[pos_addr >> 2];
+        uint32_t data = controller->regs[pos_addr];
+        COPY_BYTE_4_ARRAY(res1.data,&controller->regs[pos_addr]);
         // res1.data = controller->regs[pos_addr >> 2];
     } else {
         if(!IS_IN_KERN_MODE(cpu)) {

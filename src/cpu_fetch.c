@@ -1,6 +1,6 @@
 #include <controllers/ecall.h>
 #include <cpu.h>
-#include <tools.h>
+#include <tools/endian.h>
 uint8_t regValid(uint8_t reg1) {
     return ! (reg1 > CPU_REG_IRQ_REASON);
 }

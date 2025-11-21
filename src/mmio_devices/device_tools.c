@@ -1,7 +1,7 @@
 #include <mmio_devices/device_tools.h>
 #include <logics/logic_alg.h>
 #include <stdio.h>
-#include <tools.h>
+#include <tools/endian.h>
 uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint32_t base_address, uint8_t max_reg_size, uint8_t* regs) {
     uint8_t be = controller->data_cmd_collection.be;
     uint8_t rd_0 = (be & 1) == 1;
@@ -37,7 +37,7 @@ uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint3
 
 uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint8_t base_address,uint8_t max_reg_size, uint8_t* regs) {
     uint8_t be = controller->data_cmd_collection.be;
-    uint32_t data = GET_INT_FROM_4_BYTES(controller->data_cmd_collection.data);
+    uint32_t data = GET_INT_FROM_4_BYTES_L(controller->data_cmd_collection.data);
 
     uint8_t wri_0 = (be & 1) == 1;
     uint8_t wri_1 = (be >> 1) & 1;

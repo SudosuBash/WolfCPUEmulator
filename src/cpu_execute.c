@@ -36,13 +36,15 @@ void execute(WOLF_CPU* cpu) {
             uint8_t need_op = (data.ExFlag >> ALU_EXFLAG_OPR_MASK) & 1;
             uint32_t res1 = 0;
             uint32_t res2 = 0; //用于乘除
+            uint8_t cf = GET_SCR_CF_FLAG(cpu->spe_regs.scr);
             switch (final_ex_func) //加速
             {
             case ALU_FUN_CODE_ADD:
-                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,data.valC,sgn);
+                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,data.valC,sgn & cf);
                 break;
             case ALU_FUN_CODE_SUB:
-                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,~data.valC,sgn ^ 1);
+
+                res1 = cpu->alu->add_operate(&cpu->alu,data.valA,~data.valC,(sgn & cf) ^ 1);
                 break;
 
             case ALU_FUN_CODE_AND:

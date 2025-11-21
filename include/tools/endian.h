@@ -1,7 +1,6 @@
 #ifndef _WOLF_CPU_TOOLS_H
 #define _WOLF_CPU_TOOLS_H
 #include <stdint.h>
-#include <stdio.h>
 #include <logics/logic_alg.h>
 #include <global.h>
 
@@ -11,8 +10,6 @@
 #else
 #define IS_LITTLE_ENDIAN 0
 #endif
-
-uint8_t* read_bin(const char* name,int maxreadCount);
 
 #define SEP_INT_FOR_4_BYTES_B(intval) \
     (intval) >> 24,((intval) >> 16) & 0xff,((intval) >> 8) & 0xff,((intval)) & 0xff
@@ -30,12 +27,20 @@ uint8_t* read_bin(const char* name,int maxreadCount);
 #define GET_INT_FROM_4_BYTES_B(bytearr) ((bytearr)[0] << 24 | (bytearr)[1] << 16 | (bytearr)[2] << 8 | (bytearr)[3])
 #define GET_INT_FROM_4_BYTES_L(bytearr) ((bytearr)[3] << 24 | (bytearr)[2] << 16 | (bytearr)[1] << 8 | (bytearr)[0])
 
+#define GET_INT_FROM_2_BYTES_B(bytearr) ((bytearr)[0] << 8 | (bytearr)[1])
+#define GET_INT_FROM_2_BYTES_L(bytearr) ((bytearr)[1] << 8 | (bytearr)[0])
+
 #define GET_INT_FROM_4_BYTES(bytearr) (IS_LITTLE_ENDIAN ? GET_INT_FROM_4_BYTES_L(bytearr) : GET_INT_FROM_4_BYTES_B(bytearr))
 #define COPY_BYTE_4_ARRAY(tar,ori) {\
     (tar)[0] = (ori)[0]; \
     (tar)[1] = (ori)[1]; \
     (tar)[2] = (ori)[2]; \
     (tar)[3] = (ori)[3]; \
+}
+
+#define COPY_BYTE_2_ARRAY(tar,ori) {\
+    (tar)[0] = (ori)[0]; \
+    (tar)[1] = (ori)[1]; \
 }
 
 #define COPY_BYTE_4_ARRAY_WITH_BE(ori,tar,be) {\

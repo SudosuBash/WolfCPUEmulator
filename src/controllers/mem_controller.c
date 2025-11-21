@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <ram/ram_eff.h>
 #include <memory.h>
-#include <tools.h>
+#include <tools/endian.h>
 #define RAM_BLOCK_RECT_LOW_MASK (1<<(RAM_BLOCK_MAX_POSITION + RAM_BLOCK_MAX_POSITION))-1
 #define RAM_BLOCK_RECT_HIGH_MASK (RAM_BLOCK_RECT_LOW_MASK ^ 0xffffffff)
 
