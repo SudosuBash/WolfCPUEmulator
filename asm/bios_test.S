@@ -55,7 +55,7 @@ set_irqnum:
     ret
 
 # r8 = 设备树地址
-# 定义设备树地址 0xfffc0000
+# 定义设备树地址 0x00000000
 # 设备树结构:
 #   vendor ID: 2 bytes
 #   base address: 4 bytes
@@ -78,7 +78,7 @@ mmio_set:
     xor r10,r10 #基地址
     xor r9,r9 #中断号
     movwh r10,0xffff
-    movwh r13,0xffffx
+    movwh r13,0xffff
 
     movb r1,0
     movwl r13,0xfd00
@@ -133,8 +133,12 @@ output_main:
 output_end:
     pop r1 #恢复r1
     ret
-set_irq:
-    
+
+irq_register:
+    mov offset r1,ecall_handler_num1
+    lebr r1 # 中断向量表基址
+    ret
+
 main_bios:
     call mmio_set #枚举 MMIO 设备
     movd r14,r2 # r14 = 暂时存储输出的base_address
@@ -147,6 +151,7 @@ main_bios:
     ret
 
 ecall_handler_machine_problem:
+    rere r1 # 加载异常原因
 
 ecall_handler_num1:
     mov offset r1,ecall_handler_machine_problem 

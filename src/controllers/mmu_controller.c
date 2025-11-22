@@ -40,10 +40,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     MMU_STATUS res1 = {0};
     WOLF_CPU_MMU_CONTROLLER* controller = *pmmu;
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
-    WCPUExecuteResult res = cpu->ex_data_reg;
     WOLF_PADDR_GET paddr = paddr_get(cpu,addr);
-
-
     if((paddr.addr & (BE_ALIGN(data.be))) != 0) { //物理内存地址要求4字节对齐
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          

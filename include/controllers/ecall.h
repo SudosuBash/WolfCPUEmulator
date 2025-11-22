@@ -20,7 +20,7 @@
 #include <stdint.h>
 typedef struct WOLF_CPU_ECALL_CONTROLLER WOLF_CPU_ECALL_CONTROLLER,*PWOLF_CPU_ECALL_CONTROLLER;
 
-typedef void (*ecaller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl,uint8_t ecode, uint8_t reason);
+typedef void (*ecaller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl,uint8_t ecode, uint8_t reason, uint32_t arg);
 typedef void (*irq_caller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl);
 typedef void (*eret_caller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl);
 typedef void (*iret_caller)(PWOLF_CPU_ECALL_CONTROLLER* ctrl);

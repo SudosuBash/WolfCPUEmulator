@@ -29,7 +29,8 @@ static inline uint8_t getLRegisterB(uint8_t type,uint8_t icode, uint32_t data) {
         icode == ICODE_LBCR ||
         icode == ICODE_LPGR ||
         icode == ICODE_LEBR ||
-        icode == ICODE_LIBR
+        icode == ICODE_LIBR ||
+        icode == ICODE_REARG
     );
     uint8_t regA = (data >> 21) & 0xf;
     uint8_t icodeC = (
@@ -127,6 +128,8 @@ static inline uint8_t getLRegisterA(uint8_t icode,uint32_t data,uint8_t ExFlag,u
     uint8_t regA8 = CPU_REG_ECALL_ICBASE;
     uint8_t icodeI = (icode == ICODE_PUSHF) || (icode == ICODE_POPF);
     uint8_t regA9 = CPU_REG_SPE_SCR;
+    uint8_t icodeJ = (icode == ICODE_REARG);
+    uint8_t regA10 = CPU_REG_ECALL_EARG;
     uint8_t datares = Through8(icodeA, regA) |
         Through8(icodeB,regB) |
         Through8(icodeC,regC) |
@@ -135,7 +138,8 @@ static inline uint8_t getLRegisterA(uint8_t icode,uint32_t data,uint8_t ExFlag,u
         Through8(icodeF,regA6) |
         Through8(icodeG,regA7) |
         Through8(icodeH,regA8) |
-        Through8(icodeI,regA9);
+        Through8(icodeI,regA9) |
+        Through8(icodeJ,regA10);
     return datares;
 }
 
@@ -173,13 +177,12 @@ static inline uint8_t getExFunc(uint8_t type,uint8_t icode,uint32_t data) {
 
 
 void fetch_data(WOLF_CPU* cpu) {
-    WCPUFetchData result;
     PWOLF_CPU_ECALL_CONTROLLER* ecall_ctrler = &cpu->ecall_controller;
     PWOLF_CPU_MMU_CONTROLLER* ctrler = &(cpu->mmu);
     MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc,0b1111);
     if(mmu_res.stat != 0) {
-        cpu->ecall_controller->ecaller(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat));
-        result.noexception = 0;
+        cpu->ecall_controller->ecaller(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat),cpu->temp_data_reg.instruction);
+        cpu->temp_data_reg.noexception = 0;
         goto WCPU_FETCH_DATA_END;
     }
 
@@ -188,25 +191,24 @@ void fetch_data(WOLF_CPU* cpu) {
     uint8_t icode = (fetch >> 25) & 0b0111111;
     uint32_t data = fetch & 0x01ffffff;
     uint8_t ExFlag = getExFlag(type,icode,data);
-    result.aluExFunc = getExFunc(type,icode,data);
-    result.jmpExCond = getExCond(type,icode,data);
-    result.ExFlag = ExFlag;
-    result.irtype = type;
-    result.icode = icode;
-    result.reg1 = getLRegisterA(icode, data, ExFlag, result.jmpExCond);
-    result.reg2 = getLRegisterB(type,icode,data);
-    result.idata = getIData(type, icode, data);
-    result.valP = cpu->pc + 4;
-
-    result.noexception = 1;
+    cpu->temp_data_reg.ExFunc = getExFunc(type,icode,data);
+    cpu->temp_data_reg.ExCond = getExCond(type,icode,data);
+    cpu->temp_data_reg.ExFlag = ExFlag;
+    cpu->temp_data_reg.irtype = type;
+    cpu->temp_data_reg.icode = icode;
+    cpu->temp_data_reg.reg1 = getLRegisterA(icode, data, ExFlag, cpu->temp_data_reg.ExCond);
+    cpu->temp_data_reg.reg2 = getLRegisterB(type,icode,data);
+    cpu->temp_data_reg.valC = getIData(type, icode, data);
+    cpu->temp_data_reg.valP = cpu->pc + 4;
+    cpu->temp_data_reg.instruction = fetch;
+    cpu->temp_data_reg.noexception = 1;
     if(IS_ICODE_INVALID(icode,type)) {
-        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE); //调用 ecall 函数，代表出现问题
-        result.noexception = 0;
+        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE,cpu->temp_data_reg.instruction); //调用 ecall 函数，代表出现问题
+        cpu->temp_data_reg.noexception = 0;
     }
-    if(!regValid(result.reg1) || !regValid(result.reg2)) {
-        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNRECOGNIZED_REG);
-        result.noexception = 0;
+    if(!regValid(cpu->temp_data_reg.reg1) || !regValid(cpu->temp_data_reg.reg2)) {
+        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNRECOGNIZED_REG,cpu->temp_data_reg.instruction);
+        cpu->temp_data_reg.noexception = 0;
     }
 WCPU_FETCH_DATA_END:
-    cpu->if_data_reg = result;
 } 

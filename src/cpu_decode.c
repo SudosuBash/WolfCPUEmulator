@@ -21,33 +21,23 @@ uint8_t getDestReg(uint8_t icode,uint8_t reg1,uint8_t reg2) {
         Through8(!cond && !cond2,reg1);
 }
 void decode(WOLF_CPU* cpu) {
-    WCPUFetchData data = cpu->if_data_reg;
 
-    WCPUDecodedData res = {0};
-    if(!data.noexception) goto CPU_DECODE_END_STATUS;
-    uint8_t reg1 = data.reg1;
-    uint8_t reg2 = data.reg2;
-    uint8_t destReg = getDestReg(data.icode,reg1,reg2);
+    if(!cpu->temp_data_reg.noexception) goto CPU_DECODE_END_STATUS;
+    uint8_t reg1 = cpu->temp_data_reg.reg1;
+    uint8_t reg2 = cpu->temp_data_reg.reg2;
+    uint8_t destReg = getDestReg(cpu->temp_data_reg.icode,reg1,reg2);
     if(destReg == CPU_REG_PC) {
-        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE);
-        res.noexception = 0;
+        cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE,cpu->temp_data_reg.instruction);
+        cpu->temp_data_reg.noexception = 0;
         goto CPU_DECODE_END_STATUS;
     }//限制:destReg不能是PC
-    uint8_t destReg2 = Through8(data.icode == ICODE_POP,reg2);
+    uint8_t destReg2 = Through8(cpu->temp_data_reg.icode == ICODE_POP,reg2);
     uint32_t val1 = getRegVal(cpu,reg1);
     uint32_t val2 = getRegVal(cpu,reg2);
-    res.irtype = data.irtype;
-    res.ExCond = data.jmpExCond;
-    res.destReg = destReg;
-    res.destReg2 = destReg2;
-    res.icode = data.icode;
-    res.ExFunc = data.aluExFunc;
-    res.valA = val1;
-    res.valB = val2;
-    res.valC = getiData(data.icode,data.idata,data.jmpExCond);
-    res.ExFlag = data.ExFlag;
-    res.noexception = data.noexception; //上传
-    res.valP = data.valP;
+    cpu->temp_data_reg.destReg = destReg;
+    cpu->temp_data_reg.destReg2 = destReg2;
+    cpu->temp_data_reg.valA = val1;
+    cpu->temp_data_reg.valB = val2;
+    cpu->temp_data_reg.valC = getiData(cpu->temp_data_reg.icode,cpu->temp_data_reg.valC,cpu->temp_data_reg.ExCond);
 CPU_DECODE_END_STATUS:
-    cpu->id_data_reg = res;
 }

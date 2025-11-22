@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <tools/endian.h>
 //同步时序
-void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
+void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason,uint32_t earg) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
 
     uint32_t base_addr = cpu->ecall_regs.mpc + ecode * ECALL_SINGLE_ITEM_LENGTH;
@@ -16,6 +16,7 @@ void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason) {
     uint8_t newMode = (cpu->ecall_regs.memode >> ecode) & 1;
     cpu->spe_regs.bcr |= (newMode << (BCR_KERN_MODE_MASK));
     cpu->pc = base_addr;
+    cpu->ecall_regs.eargs = earg;
 }
 
 

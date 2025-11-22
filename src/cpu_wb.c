@@ -1,35 +1,32 @@
 #include <cpu.h>
 //没写完
 void writeback(WOLF_CPU* cpu) {
-    WCPUMemResult result = cpu->mem_data_reg;
-   
-    WCPUWBResult res;
-    if(result.noexception == 0) {
-        res.noexception = 0;
+    if(cpu->temp_data_reg.noexception == 0) {
+        cpu->temp_data_reg.noexception = 0;
         goto WB_ERR_END;
         
     }
-    uint8_t icode = result.icode;
+    uint8_t icode = cpu->temp_data_reg.icode;
     
     switch(icode) {
         case ICODE_MOV: {
-            if(IS_RTYPE(result.irtype) && ICODE_EXFLAG_MOV_MEM1(result.ExFlag)) {
+            if(IS_RTYPE(cpu->temp_data_reg.irtype) && ICODE_EXFLAG_MOV_MEM1(cpu->temp_data_reg.ExFlag)) {
                 break;
             }
-            uint8_t exflag = result.ExFlag >> 3;
-            uint8_t bec = ICODE_EXFLAG_MOV_BE(result.ExFlag >> 3);
-            write_reg_val(cpu,result.destReg, DATA32_MASK_BE(
-                cpu->gen_regs.r[result.destReg],
-                result.valC,
-                ICODE_EXFLAG_MOV_BE(result.ExFlag >> 3)
+            uint8_t exflag = cpu->temp_data_reg.ExFlag >> 3;
+            uint8_t bec = ICODE_EXFLAG_MOV_BE(cpu->temp_data_reg.ExFlag >> 3);
+            write_reg_val(cpu,cpu->temp_data_reg.destReg, DATA32_MASK_BE(
+                cpu->gen_regs.r[cpu->temp_data_reg.destReg],
+                cpu->temp_data_reg.valC,
+                ICODE_EXFLAG_MOV_BE(cpu->temp_data_reg.ExFlag >> 3)
             ));
             break;
         }
         case ICODE_MLMR:
         case ICODE_ALU: {
-            write_reg_val(cpu,result.destReg,DATA32_MASK_BE(
-                cpu->gen_regs.r[result.destReg],
-                result.valC,
+            write_reg_val(cpu,cpu->temp_data_reg.destReg,DATA32_MASK_BE(
+                cpu->gen_regs.r[cpu->temp_data_reg.destReg],
+                cpu->temp_data_reg.valC,
                 ICODE_EXFLAG_MOV_BE(0)
             ));
             break;
@@ -40,7 +37,7 @@ void writeback(WOLF_CPU* cpu) {
         case ICODE_LIPV:
         case ICODE_LPGR:
         case ICODE_LBCR:
-            write_reg_val(cpu,result.destReg, result.valB);
+            write_reg_val(cpu,cpu->temp_data_reg.destReg, cpu->temp_data_reg.valB);
             break;
         //4个指令全部传送valB
         case ICODE_RERE:
@@ -50,22 +47,13 @@ void writeback(WOLF_CPU* cpu) {
         case ICODE_PUSHF:
         case ICODE_ZWC:
         case ICODE_RET:
-            cpu->gen_regs.r[result.destReg] = result.valB;
+            cpu->gen_regs.r[cpu->temp_data_reg.destReg] = cpu->temp_data_reg.valB;
             break;
         case ICODE_POPF:
         case ICODE_POP:
-            cpu->gen_regs.r[result.destReg2] = result.valB;
-            cpu->gen_regs.r[result.destReg] = result.valC;
+            cpu->gen_regs.r[cpu->temp_data_reg.destReg2] = cpu->temp_data_reg.valB;
+            cpu->gen_regs.r[cpu->temp_data_reg.destReg] = cpu->temp_data_reg.valC;
             break;
     }
-    
-    res.icode = result.icode;
-    res.valC = result.valC;
-    res.noexception = result.noexception;
-    res.ExFunc = result.ExFunc;
-    res.irtype = result.irtype;
-    res.valP = result.valP;
-    res.ExCond = result.ExCond;
 WB_ERR_END:
-    cpu->wb_result_reg = res;
 }

@@ -10,7 +10,6 @@ uint64_t clk = 0;
 
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
-        // break_execution(cpu);
         pthread_mutex_lock(&cpu->clock_execution);
         fetch_data(cpu);
         access_check(cpu);
@@ -136,6 +135,9 @@ void write_reg_val(WOLF_CPU* cpu,uint8_t regnum,uint32_t value) {
         break;
     case CPU_REG_SPE_PGBASE:
         cpu->spe_regs.pg_mode_base_addr_reg = value;
+        break;
+    case CPU_REG_ECALL_EARG:
+        cpu->ecall_regs.eargs = value;
         break;
     default:
         break;

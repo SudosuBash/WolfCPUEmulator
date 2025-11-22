@@ -13,9 +13,7 @@
 #define WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device) \
     do { \
         pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
-        while ( \
-            !(((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address) \
-            || ((controller)->external_irq_req)))  { \
+        while ( !(DEVICE_ADDRESS_IN_RANGE(device) || (controller)->external_irq_req))  { \
             pthread_cond_wait(&(device)->device_op_signal,&(device)->bus_controller->busy_mutex); \
         } \
         pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);  \

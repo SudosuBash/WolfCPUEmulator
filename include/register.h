@@ -22,5 +22,6 @@ typedef struct {
     uint16_t mreason; //原因
     uint8_t mmode; //特权级
     uint32_t mpc; //中断/异常基址
+    uint32_t eargs; //异常参数
 } CPU_Ecall_Registers;
 #endif

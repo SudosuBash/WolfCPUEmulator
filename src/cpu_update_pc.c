@@ -1,15 +1,14 @@
 #include <cpu.h>
 
 void update_PC(WOLF_CPU* cpu) {
-    WCPUWBResult result = cpu->wb_result_reg;
-    if(result.noexception == 0) return;
-    uint8_t icode = result.icode;
+    if(cpu->temp_data_reg.noexception == 0) return;
+    uint8_t icode = cpu->temp_data_reg.icode;
     uint8_t cond = (
         icode == ICODE_OCALL || 
         icode == ICODE_RET);
-    uint32_t excond = result.ExCond & 0b1111;
+    uint32_t excond = cpu->temp_data_reg.ExCond & 0b1111;
     uint8_t val1 = 0;
-        switch(result.ExCond) {    
+        switch(cpu->temp_data_reg.ExCond) {
             case JMP_EXCOND_JMP:
                 val1 = 1;
                 break;
@@ -33,11 +32,11 @@ void update_PC(WOLF_CPU* cpu) {
                 break;
         }
 
-        uint32_t valc = Through32(icode == ICODE_JMP && val1,result.valC) |
-        Through32(icode == ICODE_JMP && !val1,result.valP);
+        uint32_t valc = Through32(icode == ICODE_JMP && val1,cpu->temp_data_reg.valC) |
+        Through32(icode == ICODE_JMP && !val1,cpu->temp_data_reg.valP);
         //JMP指令,val1为满足条件
     uint32_t updated_PC = valc |
-        Through32(cond,result.valC) |
-        Through32(!cond && icode != ICODE_JMP,result.valP);
+        Through32(cond,cpu->temp_data_reg.valC) |
+        Through32(!cond && icode != ICODE_JMP,cpu->temp_data_reg.valP);
     cpu->pc = updated_PC;
 }

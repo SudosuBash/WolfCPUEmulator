@@ -1,15 +1,14 @@
 #include <cpu.h>
 
 void ecall_proc(WOLF_CPU* cpu) {
-    WCPUExecuteResult result = cpu->ex_data_reg;
-    if(!result.noexception) return;
-    switch (cpu->wb_result_reg.icode)
+    if(cpu->temp_data_reg.noexception) return;
+    switch (cpu->temp_data_reg.icode)
     {
     case ICODE_ECALL:
-        cpu->ecall_controller->ecaller(&cpu->ecall_controller,cpu->wb_result_reg.valC,EREASON_FOR_SOFTWARE_CALLING);
+        cpu->ecall_controller->ecaller(&cpu->ecall_controller,cpu->temp_data_reg.valC,EREASON_FOR_SOFTWARE_CALLING,0);
         break;
     case ICODE_RET:
-        switch (cpu->wb_result_reg.ExFunc)
+        switch (cpu->temp_data_reg.ExFunc)
         {
         case ICODE_ERET_EXFUNC:
             cpu->ecall_controller->eret_caller(&cpu->ecall_controller);
@@ -21,5 +20,5 @@ void ecall_proc(WOLF_CPU* cpu) {
     default:
         break;
     }
-    result.noexception = 0;
+    cpu->temp_data_reg.noexception = 0;
 }

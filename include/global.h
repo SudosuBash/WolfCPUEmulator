@@ -74,5 +74,5 @@
 //地址0x2,访问1字节返回结果: 0b0010
 // #define _EMU_DEBUG 1
 // #define _EMU_IRQ_TEST_DEBUG 1
-// #define _EMU_MMIO_DEBUG 1
+#define _EMU_MMIO_DEBUG 1
 #endif

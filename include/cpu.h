@@ -43,6 +43,8 @@
 //异常发生原因寄存器
 #define CPU_REG_IRQ_REASON 0b10111
 //中断发生原因寄存器
+#define CPU_REG_ECALL_EARG 0b11000
+//异常参数寄存器
 #define CPU_REG_RSP 14
 #define CPU_REG_MULDIV 13
 
@@ -96,7 +98,8 @@
 //R类
 #define ICODE_HLT 0b110111
 
-
+#define ICODE_REARG 0b001001
+//R类
 #define ICODE_RET_EXFUNC 0x01
 #define ICODE_IRET_EXFUNC 0x10
 #define ICODE_ERET_EXFUNC 0x11
@@ -186,13 +189,15 @@
         && (icode) != ICODE_ZWC \
         && (icode) != ICODE_PUSH \
         && (icode) != ICODE_POP  \
-        && (icode) != ICODE_NOP) \
+        && (icode) != ICODE_NOP \
+        && (icode) != ICODE_REARG) \
     || ((( \
         (icode) == ICODE_PUSH || \
         (icode) == ICODE_POP || \
         (icode) == ICODE_ZWC || \
         (icode) == ICODE_RET || \
         (icode) == ICODE_RERE || \
+        (icode) == ICODE_REARG || \
         IS_PRIVILEGE_INSTRUCTION(icode) \
         ) && !IS_RTYPE(type)) \
     ) || ( \
@@ -204,74 +209,25 @@
 
 #define ICODE_EXFLAG_MOV_MEM1(exflag) ((exflag) >> 1) & 1
 #define ICODE_EXFLAG_MOV_MEM2(exflag) ((exflag) & 1)
+
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;
-    uint8_t reg1:5;
-    uint8_t reg2:5;
-    uint16_t idata;
-    uint8_t aluExFunc:3;
-    uint8_t jmpExCond:4;
-    uint8_t ExFlag:5;
-    uint8_t noexception:1;//指令应该继续执行吗?
-    uint32_t valP;
-} WCPUFetchData;
-
-typedef struct {
-    uint8_t irtype:1;
-    uint8_t icode;
     uint8_t destReg:5;
     uint8_t destReg2:5;
-    uint32_t valC_Extended;//用于乘除法
-    uint32_t valC;
-    uint32_t valB;
-    uint8_t ExCond:3;
-    uint8_t ExFunc:4;
-    uint8_t ExFlag:5;
-    uint8_t noexception:1;//指令应该继续执行吗?
-    uint32_t valP;
-} WCPUMemResult;
-
-typedef struct {
-    uint8_t irtype:1;
-    uint32_t valC;
-    uint32_t valC_Extended;//用于乘除法
-    uint32_t valB;
-    uint32_t valA;
-    uint8_t icode;
-    uint8_t destReg;
-    uint8_t destReg2:5;
-    uint8_t ExCond:3;
-    uint8_t ExFunc:4;
-    uint8_t ExFlag:5;
-    uint8_t noexception:1;//指令应该继续执行吗?
-    uint32_t valP;
-}WCPUExecuteResult;
-
-typedef struct {
-    uint8_t irtype:1;
-    uint8_t icode;
-    uint8_t destReg;
-    uint8_t destReg2:5;
+    uint8_t reg1:5;
+    uint8_t reg2:5;
     uint32_t valA;
     uint32_t valB;
     uint32_t valC;
+    uint32_t valC_Extended;//用于乘除法
     uint8_t ExCond:4;
     uint8_t ExFunc:4;
     uint8_t ExFlag:5;
     uint8_t noexception:1;//指令应该继续执行吗?
     uint32_t valP;
-} WCPUDecodedData;
-
-typedef struct {
-    uint8_t irtype:1;
-    uint8_t icode;
-    uint32_t valC;
-    uint8_t noexception:1;
-    uint8_t ExFunc:4;
-    uint8_t ExCond:4;
-    uint32_t valP;
-} WCPUWBResult;
+    uint32_t instruction;
+} WCPUTempData;
 
 typedef struct {
     uint32_t pc;
@@ -291,12 +247,7 @@ typedef struct {
     MACHINE_L1_CACHE_GROUP** cache1;
     MACHINE_L2_CACHE_GROUP** cache2;
     
-
-    WCPUFetchData if_data_reg;
-    WCPUDecodedData id_data_reg;
-    WCPUExecuteResult ex_data_reg;
-    WCPUMemResult mem_data_reg;
-    WCPUWBResult wb_result_reg;
+    WCPUTempData temp_data_reg;
 
     pthread_mutex_t clock_execution; //CPU 时序锁
     //真实电路都是按照时序来的，不需要这玩意，这个只是模拟时序
