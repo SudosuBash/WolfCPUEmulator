@@ -17,10 +17,9 @@ typedef struct {
 
 typedef struct {
     uint32_t mep; //存储当前pc
-    uint64_t memode; //对应中断的特权级(x位)
-    uint64_t mimode; //对应异常特权级(x位)
+    uint64_t mmode; //对应异常特权级(x位)
     uint16_t mreason; //原因
-    uint8_t mmode; //特权级
+    uint8_t mprevmode; //特权级
     uint32_t mpc; //中断/异常基址
     uint32_t eargs; //异常参数
 } CPU_Ecall_Registers;

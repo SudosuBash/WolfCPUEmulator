@@ -27,7 +27,6 @@ timeout:
     call output_str
     jmp fffc # 死机
 
-
 # 输入:
 # r1 = 执行指令
 # r10 = 基地址
@@ -52,6 +51,20 @@ set_irqnum:
     movb r1,3 #执行设置中断号命令
     movb [r13],r1    #执行命令
     add r9,1    #中断号+1
+    ret
+
+#禁用中断
+disallow_irq:
+    rbcr r1
+    movb r2,0xf0
+    xor r1,r2
+    lbcr r1
+    ret
+
+# 初始化CPU中断
+init_irq:
+    call disallow_irq #暂时禁用中断
+
     ret
 
 # r8 = 设备树地址
@@ -140,6 +153,7 @@ irq_register:
     ret
 
 main_bios:
+    movwl r14,0xf000 # 初始化栈指针
     call mmio_set #枚举 MMIO 设备
     movd r14,r2 # r14 = 暂时存储输出的base_address
 
@@ -151,11 +165,14 @@ main_bios:
     ret
 
 ecall_handler_machine_problem:
-    rere r1 # 加载异常原因
+    rere r2 # 加载异常原因
+    ml r2,4 # 乘以4，得到跳转偏移
+    add r2,r1 # 计算跳转地址
+    jmp r2
 
 ecall_handler_num1:
     mov offset r1,ecall_handler_machine_problem 
     #伪指令，实际上等于两条条指令，会集成到汇编器
     #movwh r1,计算出来地址低16位
     #movwl r1,计算出来地址高16位
-    jmp r1 //跳转到处理函数
+    jmp r1 #跳转到处理函数
