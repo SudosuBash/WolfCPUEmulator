@@ -7,4 +7,6 @@
 */*.o
 */**/*.o
 build
-asm
+.github
+docs
+bin

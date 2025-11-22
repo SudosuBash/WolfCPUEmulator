@@ -80,15 +80,14 @@ PWOLF_CPU_BUS_DEVICE* init_clock_device(WOLF_CPU_BUS_CONTROLLER* controller, WOL
     bus_device->irq_number = 0x7;
 #endif
     pthread_rwlock_init(&(clock_device->device_rwlock),NULL);
-    pthread_mutex_init(&(clock_device->stdio_lock),NULL);
     return &clock_device->bus_device; //被坑惨了qwq
 }
 //只能调用一次
 void destroy_clock_device(PWOLF_MMIO_CLOCK_DEVICE* pclock_device) { //设备结束运行时候调用的
     WOLF_MMIO_CLOCK_DEVICE* clock_device = *pclock_device;
-    pthread_rwlock_destroy(&(clock_device->device_rwlock));
-    pthread_mutex_destroy(&(clock_device->stdio_lock));
+
     if(clock_device != NULL) {
+        pthread_rwlock_destroy(&(clock_device->device_rwlock));
         if (clock_device->bus_device != NULL) {
             free(clock_device->bus_device);
         }

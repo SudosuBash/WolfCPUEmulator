@@ -17,32 +17,26 @@ static const uint16_t device_id = 0x1001;
 static void write_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,BUS_SEND_DATA data) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE, bus_device);
-    pthread_rwlock_wrlock(&(dev->device_rwlock));
     uint8_t stat = write_reg_general(device->bus_controller,addr,device->base_address,STDO_DEVICE_REGS,dev->regs);
     if(stat == 0) {
         device->bus_controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;
         dev->bus_device->device_base_status = 1;
-        pthread_rwlock_unlock(&(dev->device_rwlock));
         return;
     }
     device->bus_controller->data_cmd_collection.status = BUS_STATUS_ERROR;
     dev->bus_device->device_base_status = 0;
-    pthread_rwlock_unlock(&(dev->device_rwlock));
 }
 
 static void read_reg(PWOLF_CPU_BUS_DEVICE* pdevice,uint8_t addr,uint8_t be) {
     WOLF_CPU_BUS_DEVICE* device = *pdevice;
     WOLF_MMIO_STDO_DEVICE* dev = get_parent_struct(pdevice,WOLF_MMIO_STDO_DEVICE,bus_device);
-    pthread_rwlock_rdlock(&(dev->device_rwlock));
     uint8_t stat = read_reg_general(device->bus_controller,addr,device->base_address,STDO_DEVICE_REGS,dev->regs);
 
     if(stat == 0) {
         device->bus_controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;
         dev->bus_device->device_base_status = 1;
-        pthread_rwlock_unlock(&(dev->device_rwlock));
     }
     device->bus_controller->data_cmd_collection.status = BUS_STATUS_ERROR;
-    pthread_rwlock_unlock(&(dev->device_rwlock));
 }
 
 static void device_output(WOLF_MMIO_STDO_DEVICE* device,uint8_t write_buf) {
@@ -61,7 +55,6 @@ static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
     WAIT_FOR_BUS_WAKE_UP_COMMON_DEVICE(device);
     PROCESS_DEVICE_REGISTER_WRITING(device);
 
-    pthread_rwlock_wrlock(&(dev->device_rwlock));
     switch (dev->regs[STDO_DEVICE_FUNC_REG]) {
         case 1:
             dev->regs[STDO_DEVICE_STAT_REG] = STDO_STAT_BUSY;
@@ -72,7 +65,6 @@ static void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
             dev->regs[STDO_DEVICE_STAT_REG] = STDO_STAT_ERROR_UNKNOWN_CMD;
             break;
     }
-    pthread_rwlock_unlock(&(dev->device_rwlock));
 }
 //只能调用一次
 PWOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
@@ -88,19 +80,21 @@ PWOLF_CPU_BUS_DEVICE* init_stdo_device(WOLF_CPU_BUS_CONTROLLER* controller) {
 #ifdef _EMU_MMIO_DEBUG
     bus_device->base_address = 0xffff0000;
 #endif
-    pthread_rwlock_init(&(stdo_device->device_rwlock),NULL);
     pthread_mutex_init(&(stdo_device->stdio_lock),NULL);
     return &stdo_device->bus_device; //被坑惨了qwq
 }
 //只能调用一次
 void destroy_stdo_device(PWOLF_MMIO_STDO_DEVICE* pstdo_device) { //设备结束运行时候调用的
     WOLF_MMIO_STDO_DEVICE* stdo_device = *pstdo_device;
-    pthread_rwlock_destroy(&(stdo_device->device_rwlock));
-    pthread_mutex_destroy(&(stdo_device->stdio_lock));
+   
     if(stdo_device != NULL) {
+         pthread_mutex_destroy(&(stdo_device->stdio_lock));
+
         if (stdo_device->bus_device != NULL) {
+            pthread_mutex_destroy(&(stdo_device->bus_device->device_op_signal));
             free(stdo_device->bus_device);
         }
+
         free(stdo_device);
         *pstdo_device = NULL;
     }

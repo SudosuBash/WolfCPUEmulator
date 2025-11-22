@@ -25,8 +25,7 @@ uint8_t read_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint3
         pthread_mutex_unlock(&controller->device_request_mutex);
         return STAT_UNKNOWN_ERROR;
     }
-    uint8_t dat_arr[4] = {Mux8(rd_0,0,regs[rel_addr]),Mux8(rd_1,0,regs[rel_addr1]),Mux8(rd_2,0,regs[rel_addr2]),Mux8(rd_3,0,regs[rel_addr3])};
-    COPY_BYTE_4_ARRAY(controller->data_cmd_collection.data,dat_arr);
+    COPY_BYTE_4_ARRAY_WITH_BE(controller->data_cmd_collection.data,&regs[rel_addr],be);
     pthread_mutex_lock(&controller->device_request_mutex);
 
     controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;
@@ -73,7 +72,5 @@ uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint
 }
 
 void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller) {
-    // bus_controller->data_cmd_collection.be = 0;
-    // bus_controller->data_cmd_collection.data = 0;//重置
     bus_controller->addr = 0;
 }

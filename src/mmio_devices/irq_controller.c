@@ -16,7 +16,7 @@
         while ( \
             !(((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address) \
             || ((controller)->external_irq_req)))  { \
-            pthread_cond_wait(&(device)->bus_controller->busy_cond[1],&(device)->bus_controller->busy_mutex); \
+            pthread_cond_wait(&(device)->device_op_signal,&(device)->bus_controller->busy_mutex); \
         } \
         pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);  \
     } while(0);
@@ -77,7 +77,7 @@ void irq_trigger(WOLF_IRQ_CONTROLLER* controller, WOLF_CPU_BUS_DEVICE* device) {
     //抢主线的锁
     pthread_mutex_lock(&controller->bus_device->bus_controller->busy_mutex);
     controller->external_irq_req = 1;
-    pthread_cond_signal(&controller->bus_device->bus_controller->busy_cond[1]);
+    pthread_cond_signal(&controller->bus_device->device_op_signal);
     pthread_mutex_unlock(&controller->bus_device->bus_controller->busy_mutex);
 
     pthread_mutex_unlock(&(controller->device_rwlock));
@@ -230,6 +230,7 @@ void destroy_irq_device(PWOLF_IRQ_CONTROLLER* pirq_device) { //设备结束运�
     pthread_mutex_destroy(&(irq_device->device_rwlock));
     if(irq_device != NULL) {
         if (irq_device->bus_device != NULL) {
+            pthread_mutex_destroy(&(irq_device->bus_device->device_op_signal));
             free(irq_device->bus_device);
         }
         free(irq_device);

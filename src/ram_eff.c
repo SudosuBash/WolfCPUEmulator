@@ -60,5 +60,16 @@ RAM_INTERFACE_UNIT* init_ram_unit() {
     return unit;
 }
 void free_ram_unit(RAM_INTERFACE_UNIT* unit) {
-
+    if(unit != NULL) {
+        for(int i=0;i<RAM_PDE_ITEM;i++) {
+            for(int j=0;j<RAM_PTE_ITEM;j++) {
+                if(unit->ram_page_table[i][j] != NULL) {
+                    free(unit->ram_page_table[i][j]);
+                    unit->ram_page_table[i][j] = NULL;
+                }
+            }
+        }
+        free(unit);
+        unit = NULL;
+    }
 }

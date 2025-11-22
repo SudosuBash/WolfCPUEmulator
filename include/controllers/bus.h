@@ -49,7 +49,6 @@ struct WOLF_CPU_BUS_CONTROLLER {
     pthread_mutex_t device_request_mutex;
     pthread_cond_t device_request_mutex_cond; //等待反馈
 
-    pthread_cond_t busy_cond[BUS_MUTEX_COND_COUNT];
     pthread_mutex_t busy_mutex;
 };
 
@@ -63,6 +62,7 @@ struct WOLF_CPU_BUS_DEVICE {
     uint8_t device_base_status;
     uint32_t irq_number; //传递中断号
 
+    pthread_cond_t device_op_signal;
     pthread_t thread;
     pthread_attr_t thread_attr;
 

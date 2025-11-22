@@ -40,18 +40,26 @@
 #define GET_DATA_BIT1(data) (((data) >> 1) & 0x1)
 #define GET_DATA_BIT2(data) (((data) >> 2) & 0x1)
 #define GET_DATA_BIT3(data) (((data) >> 3) & 0x1)
-#define BE_DATA(data) \
-   (Through8((data)==0b1,1) | \
-   Through8((data)==0b11,2) | \
-   Through8((data)==0b1111,4))
 
 #define BE_ALIGN(data) \
    BE_DATA(data) - 1
 
+#define EXFLAG_OPERATE_4_BITS 0b00
+#define EXFLAG_OPERATE_2_BITS_LOW 0b10
+#define EXFLAG_OPERATE_1_BITS 0b01
+#define EXFLAG_OPERATE_2_BITS_HIGH 0b11
+
+#define BE_DATA(data) \
+   (Through8((data)==0b1,1) | \
+   Through8((data)==0b11,2) | \
+   Through8((data)==0b1111 || (data) == 0b0011,4))
+
 #define ICODE_EXFLAG_MOV_BE(data) \
-   (Through32((data)==0b1,0b1) | \
-   Through32((data)==0b10,0b11) | \
-   Through32((data)==0b0 || (data) == 0b11,0b1111))
+   (Through32((data)==EXFLAG_OPERATE_1_BITS,0b1) | \
+   Through32((data)==EXFLAG_OPERATE_2_BITS_LOW,0b11) | \
+   Through32((data)==EXFLAG_OPERATE_4_BITS,0b1111) | \
+   Through32((data)==EXFLAG_OPERATE_2_BITS_HIGH,0b0011))
+
 //通过EXFLAG获取对应的掩码
 #define DATA32_MASK_BE(origin,dest,be) ( \
    Mux8((be) & 0x1,GET_DATA_0(origin),GET_DATA_0(dest)) | \
@@ -66,5 +74,5 @@
 //地址0x2,访问1字节返回结果: 0b0010
 // #define _EMU_DEBUG 1
 // #define _EMU_IRQ_TEST_DEBUG 1
-#define _EMU_MMIO_DEBUG 1
+// #define _EMU_MMIO_DEBUG 1
 #endif

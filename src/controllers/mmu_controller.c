@@ -87,19 +87,13 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
             return res1;
         }
         COPY_BYTE_4_ARRAY_WITH_BE(&controller->regs[pos_addr],data.data,data.be);
-        // controller->regs[pos_addr] = DATA32_MASK_BE(controller->regs[pos_addr],data.data,
-        //     BE_NOT_ALIGN4_GET(paddr.addr & 3,data.be));
-        //写入对应的寄存器，但是实际上的话是这样的
-        //paddr.addr & 3 获取余数
-        //data.be是对应地址要写入的be
-        //获取到的be就是相对于pos_addr的be
 
         uint32_t cmd = controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_CMD];
         uint32_t device_num = GET_INT_FROM_2_BYTES_L(&controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA]);
         if(device_num > MAX_BUS_DEVICE) return res1;
         //简化逻辑就不增加对外接口了，真实电路应该加在Bus加一个对外访问函数用于模拟对外接口
-        controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_REGA] = cpu->bus->devices[device_num]->vendor_id; 
-        //更新设备的总线位置，读取对应的vendor_id
+        uint8_t vendor_id_b[2] = {SEP_INT_FOR_2_BYTES_L(cpu->bus->devices[device_num]->vendor_id)};
+        COPY_BYTE_2_ARRAY(&controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VENDOR_ID_REGA],vendor_id_b);
         //此寄存器只读，CPU对这个寄存器的写入操作不会触发异常，但是结果无效,NEED_SPACE同此
         controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_NEED_SPACE_REGA] = cpu->bus->devices[device_num]->need_space;
         //更新设备的总线位置，读取对应的need_space
@@ -117,8 +111,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
                 break;
             }
         }
-        uint8_t ZERO[4] = {0,0,0,0};
-        COPY_BYTE_4_ARRAY(&controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_VAL_REGA],ZERO);
+        controller->regs[MMU_CONTROLLER_NOW_BUSDEVICE_CMD] = 0;
         //更新base_address
         //一次设备枚举包含两个阶段，一个是更新设备总线位置，一个是更新设备的bar
 
@@ -158,7 +151,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         }
         RAM_RD_STATUS stat = cpu->mem_controller->rd_ram(&cpu->mem_controller,paddr.addr);
         res1.stat = Through32(stat.dmem_error,BCR_RAM_ERR);
-        if(res1.stat != 0) {
+        if(res1.stat != BCR_RAM_ERR_OK) {
             return res1;
         }
         cache->ld_l2_cache(cpu->cache2,paddr.addr,stat.data.offset);

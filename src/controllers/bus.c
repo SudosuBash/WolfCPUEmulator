@@ -14,18 +14,28 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
     data.read_write = BUS_RW_WRITE;
     bus_ctrl->data_cmd_collection = data;
     bus_ctrl->addr = addr;
-    pthread_cond_broadcast(&bus_ctrl->busy_cond[0]);
-    pthread_cond_broadcast(&bus_ctrl->busy_cond[1]);
-    pthread_cond_broadcast(&bus_ctrl->busy_cond[2]);
+    //for循环可比锁竞争快多了
+    for(int i=0;i<MAX_BUS_DEVICE;i++) {
+        if(bus_ctrl->devices[i] == NULL) continue;
+        if(bus_ctrl->devices[i]->base_address <= addr && addr < bus_ctrl->devices[i]->base_address+bus_ctrl->devices[i]->need_space) {
+            pthread_cond_signal(&bus_ctrl->devices[i]->device_op_signal);
+            break;
+        }
+    }
     pthread_mutex_unlock(&bus_ctrl->busy_mutex);
 
-    //广播所有设备
     pthread_mutex_lock(&bus_ctrl->device_request_mutex);
     struct timespec timeout;
     clock_gettime(CLOCK_REALTIME, &timeout);
-    timeout.tv_sec +=BUS_WAIT_DELTA / 1000;//外设等待0.5s
-    int res = pthread_cond_timedwait(&bus_ctrl->device_request_mutex_cond,&bus_ctrl->device_request_mutex,&timeout);
-    pthread_mutex_unlock(&bus_ctrl->device_request_mutex);
+    timeout.tv_nsec += BUS_WAIT_DELTA * 1000 * 1000;//外设等待0.5s
+    while(bus_ctrl->data_cmd_collection.status==BUS_STATUS_PENDING) {
+        int res = pthread_cond_timedwait(&bus_ctrl->device_request_mutex_cond,&bus_ctrl->device_request_mutex,&timeout);
+        if(res==ETIMEDOUT) {
+            bus_ctrl->data_cmd_collection.status = BUS_STATUS_TIMEOUT;
+            break;
+        }
+    }
+   pthread_mutex_unlock(&bus_ctrl->device_request_mutex);
 
 #ifdef _EMU_DEBUG
     fflush(stdout);
@@ -33,8 +43,7 @@ uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEN
 #endif
     uint8_t status = bus_ctrl->data_cmd_collection.status;
     
-    if(bus_ctrl->data_cmd_collection.status == BUS_STATUS_PENDING) {
-        bus_ctrl->data_cmd_collection.status = BUS_STATUS_TIMEOUT; //得不到响应，设定超时  
+    if(bus_ctrl->data_cmd_collection.status == BUS_STATUS_TIMEOUT) {
         status = BUS_STATUS_TIMEOUT;
         return status;
     }
@@ -49,9 +58,14 @@ BUS_SEND_DATA bus_recv_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,B
     data.read_write = BUS_RW_READ;
     bus_ctrl->data_cmd_collection = data;
     bus_ctrl->addr = addr;
-    pthread_cond_broadcast(&bus_ctrl->busy_cond[0]);
-    pthread_cond_broadcast(&bus_ctrl->busy_cond[1]);
-    pthread_cond_broadcast(&bus_ctrl->busy_cond[2]);
+    //for循环可比锁竞争快多了
+    for(int i=0;i<MAX_BUS_DEVICE;i++) {
+        if(bus_ctrl->devices[i] == NULL) continue;
+        if(bus_ctrl->devices[i]->base_address <= addr && addr < bus_ctrl->devices[i]->base_address+bus_ctrl->devices[i]->need_space) {
+            pthread_cond_signal(&bus_ctrl->devices[i]->device_op_signal);
+            break;
+        }
+    }
     pthread_mutex_unlock(&bus_ctrl->busy_mutex); 
     //广播设备
 
@@ -84,10 +98,6 @@ WOLF_CPU_BUS_CONTROLLER* init_bus() {
     pthread_cond_init(&(controller->device_request_mutex_cond),NULL);
     
     pthread_mutex_init(&(controller->busy_mutex),NULL);
-    for(uint8_t i=0;i<BUS_MUTEX_COND_COUNT;i++) {
-        pthread_cond_init(&(controller->busy_cond[i]),NULL);
-    }
-
     //后续实现register_devices 
     return controller;
 }
@@ -97,9 +107,6 @@ void free_bus(WOLF_CPU_BUS_CONTROLLER** bus) {
         pthread_mutex_destroy(&(*bus)->device_request_mutex);
         pthread_cond_destroy(&(*bus)->device_request_mutex_cond);
         pthread_mutex_destroy(&(*bus)->busy_mutex);
-        for(uint8_t i=0;i<BUS_MUTEX_COND_COUNT;i++) {
-            pthread_cond_destroy(&(*bus)->busy_cond[i]);
-        }
         free(*bus);
         *bus = NULL;
     }

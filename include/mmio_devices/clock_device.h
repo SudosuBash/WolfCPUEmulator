@@ -3,7 +3,7 @@
 #include <global.h>
 #include <pthread.h>
 
-#define CLOCK_DEVICE_REGS 2
+#define CLOCK_DEVICE_REGS 4
 #define CLOCK_DEVICE_OPEN_ADDR 0
 #define CLOCK_DEVICE_WAIT_DELTA 1
 #include <stdint.h>
@@ -15,7 +15,6 @@ typedef struct {
     WOLF_CPU_BUS_DEVICE* bus_device;
 
     pthread_rwlock_t device_rwlock;
-    pthread_mutex_t stdio_lock;
 } WOLF_MMIO_CLOCK_DEVICE,*PWOLF_MMIO_CLOCK_DEVICE;
 
 PWOLF_CPU_BUS_DEVICE* init_clock_device(WOLF_CPU_BUS_CONTROLLER* controller,WOLF_IRQ_CONTROLLER* irq);

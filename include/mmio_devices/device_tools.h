@@ -22,7 +22,7 @@ void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller);
     do { \
         pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
         while (!((device)->bus_controller->addr < (device)->base_address + device->need_space && (device)->bus_controller->addr >= (device)->base_address))  { \
-            pthread_cond_wait(&(device)->bus_controller->busy_cond[0],&(device)->bus_controller->busy_mutex); \
+            pthread_cond_wait(&(device)->device_op_signal,&(device)->bus_controller->busy_mutex); \
         } \
         pthread_mutex_unlock(&(device)->bus_controller->busy_mutex);   \
     } while(0);
@@ -37,6 +37,7 @@ void reset_bus(WOLF_CPU_BUS_CONTROLLER* bus_controller);
 
 #define INIT_BUS_DEVICE(bus_device,pname,pvendor,controller,pvendor_id,pneed_space,pstart_func,prd_reg_func,pwr_reg_func) \
     do { \
+        pthread_cond_init(&(bus_device)->device_op_signal,NULL); \
         strncpy((bus_device)->name, (pname), DEVICE_NAME_STR_MAX); \
         strncpy((bus_device)->vendor, (pvendor),DEVICE_VENDOR_STR_MAX); \
             (bus_device)->bus_controller = (controller); \

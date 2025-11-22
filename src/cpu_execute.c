@@ -19,11 +19,13 @@ void execute(WOLF_CPU* cpu) {
         case ICODE_MOV: {
             uint8_t i1_mem = ICODE_EXFLAG_MOV_MEM1(data.ExFlag);
             uint8_t i2_mem = ICODE_EXFLAG_MOV_MEM2(data.ExFlag);
+            uint8_t bit = data.ExFlag >> 3;
             if(i1_mem && i2_mem && IS_RTYPE(data.irtype)) {
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,EREASON_FOR_UNSUPPORTED_ICODE);
                 goto CPU_EXEC_END_STATUS;
             }
             uint32_t f_val = Through32(i1_mem,res.valA) | Through32(i2_mem || (!i1_mem && !i2_mem),res.valB);
+            res.valC = Through32(bit == EXFLAG_OPERATE_2_BITS_HIGH,res.valC << 16);
             res.valC = Through32(IS_RTYPE(data.irtype),f_val) |
                 Through32(IS_ITYPE(data.irtype),res.valC);
             break;

@@ -85,6 +85,10 @@ void free_cpu(WOLF_CPU** cpu) {
         free_ecall(&(ocpu->ecall_controller));
         free_bus(&(ocpu->bus));
         free_alu(&(ocpu->alu));
+        free_mem(&(ocpu->mem_controller));
+        free_mmu_controller(&(ocpu->mmu));
+        free_l1_group(&(ocpu->cache1),CACHE_L1_GROUPS);
+        free_l2_group(&(ocpu->cache2),CACHE_L2_GROUPS);
         free(*cpu);
         *cpu = NULL;
     }
