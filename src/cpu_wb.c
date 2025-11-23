@@ -1,5 +1,5 @@
 #include <cpu.h>
-//没写完
+
 void writeback(WOLF_CPU* cpu) {
     if(cpu->temp_data_reg.noexception == 0) {
         cpu->temp_data_reg.noexception = 0;
@@ -47,6 +47,7 @@ void writeback(WOLF_CPU* cpu) {
         case ICODE_PUSHF:
         case ICODE_ZWC:
         case ICODE_RET:
+        case ICODE_REARG:
             cpu->gen_regs.r[cpu->temp_data_reg.destReg] = cpu->temp_data_reg.valB;
             break;
         case ICODE_POPF:

@@ -12,8 +12,8 @@ void ecall(PWOLF_CPU_ECALL_CONTROLLER *ctrl, uint8_t ecode,uint8_t reason,uint32
     uint32_t base_addr = cpu->ecall_regs.mpc + ecode * ECALL_SINGLE_ITEM_LENGTH;
     cpu->ecall_regs.mep = cpu->pc;
     cpu->ecall_regs.mreason = reason;
-    cpu->ecall_regs.mmode = IS_IN_KERN_MODE(cpu);
-    uint8_t newMode = (cpu->ecall_regs.mprevmode >> ecode) & 1;
+    cpu->ecall_regs.mprevmode = IS_IN_KERN_MODE(cpu);
+    uint8_t newMode = (cpu->ecall_regs.mmode >> ecode) & 1;
     cpu->spe_regs.bcr |= (newMode << (BCR_KERN_MODE_MASK));
     cpu->pc = base_addr;
     cpu->ecall_regs.eargs = earg;
@@ -36,8 +36,8 @@ void irq_call(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     
     uint32_t base_addr = cpu->irq_regs.mpc + irqcode * ECALL_SINGLE_ITEM_LENGTH;
     cpu->irq_regs.mep = cpu->pc;
-    cpu->irq_regs.mmode = IS_IN_KERN_MODE(cpu);
-    uint8_t newMode = (cpu->irq_regs.mprevmode >> irqcode) & 1;
+    cpu->irq_regs.mprevmode = IS_IN_KERN_MODE(cpu);
+    uint8_t newMode = (cpu->irq_regs.mmode >> irqcode) & 1;
     cpu->pc = base_addr;
     cpu->spe_regs.bcr |= (BCR_IRQ_DISALLOW_MASK | (newMode << (BCR_KERN_MODE_MASK)));
     (*ctrl)->external_irq = 0;
@@ -53,7 +53,7 @@ void eret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
 void iret(PWOLF_CPU_ECALL_CONTROLLER* ctrl) {
     WOLF_CPU* cpu = get_parent_struct(ctrl, WOLF_CPU, ecall_controller);
     cpu->spe_regs.bcr &= (0b11111111 ^ BCR_IRQ_DISALLOW_MASK);
-    cpu->spe_regs.bcr &= cpu->irq_regs.mmode << (BCR_KERN_MODE_MASK); //恢复特权级
+    cpu->spe_regs.bcr &= cpu->irq_regs.mprevmode << (BCR_KERN_MODE_MASK); //恢复特权级
     cpu->pc = cpu->irq_regs.mpc;
     cpu->ecall_regs.mep = 0;
     cpu->ecall_regs.mreason = 0;

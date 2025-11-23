@@ -102,6 +102,8 @@ mmio_set_start:
     movwh r13,0xfd0a
     movwl r12,[r13]  #vendor_id入r12
 
+    # 有bug，应该枚举设备是否超过总线支持的设备数，若超过就停止枚举
+    # 而不是判断vendor_id是否为0
     xorn r12,r12 #判断vendor_id是否为0
     jne mmio_set_end #不为0继续枚举
 
@@ -166,7 +168,7 @@ main_bios:
 
 ecall_handler_machine_problem:
     rere r2 # 加载异常原因
-    ml r2,4 # 乘以4，得到跳转偏移
+    ml r2,2 # 乘以4，得到跳转偏移
     add r2,r1 # 计算跳转地址
     jmp r2
 

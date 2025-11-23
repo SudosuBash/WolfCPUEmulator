@@ -10,6 +10,7 @@ uint64_t clk = 0;
 
 void start_cpu(WOLF_CPU *cpu) {
     while (1) {
+        break_execution(cpu);
         pthread_mutex_lock(&cpu->clock_execution);
         fetch_data(cpu);
         access_check(cpu);
@@ -28,6 +29,7 @@ void start_cpu(WOLF_CPU *cpu) {
 void init_env() {
     WOLF_CPU* cpu = init_cpu();
     init_devices(cpu);
+    init_break_execution();
     load_bios();
     start_cpu(cpu);
     free_cpu(&cpu);
@@ -110,6 +112,10 @@ uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
             return cpu->spe_regs.flags;
         case CPU_REG_PC:
             return cpu->pc;
+        case CPU_REG_SPE_SCR:
+            return cpu->spe_regs.scr;
+        case CPU_REG_ECALL_EARG:
+            return cpu->ecall_regs.eargs;
     }
     
 }
