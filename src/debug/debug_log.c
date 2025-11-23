@@ -96,6 +96,10 @@ static uint8_t bp_cmd_execer(char* args) {
         printf("E: Breakpoint Error: Invalid address: %s\n", args);
         return 1;
     }
+    if(addr & 3) {
+        printf("E: Breakpoint Error: Address must be 4-bytes aligned: %s\n",args);
+        return 2;
+    }
     controller.set_breakpoint(&controller, (uint32_t)addr);
     return 0;
 }
