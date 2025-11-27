@@ -57,4 +57,5 @@ void writeback(WOLF_CPU* cpu) {
             break;
     }
 WB_ERR_END:
+    return;
 }

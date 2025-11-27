@@ -7,9 +7,6 @@
 #include <pthread.h>
 #include <controllers/ecall.h>
 #include <unistd.h>
-
-//是这样的，我定义总线存在好几个条件变量，第二个专门处理irq相关的请求
-//pthread不能同时处理两个条件变量的或(真的让我吐血)，只能先这样子解决一下
 #define WAIT_FOR_BUS_AND_EXTERNAL_IRQ_WAKE_UP(controller,device) \
     do { \
         pthread_mutex_lock(&(device)->bus_controller->busy_mutex); \
@@ -156,11 +153,12 @@ void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
         case IRQ_CMD_PROCESS_OK:
             set_interrupt_ok(controller,irq_num);
             break;
-        case IRQ_CMD_SET_PRIORITY:
+        case IRQ_CMD_SET_PRIORITY: {
             uint8_t prio = controller->regs[IRQ_CONTROLLER_DEVICE_PRIO_SET];
             set_priority(controller,irq_num,prio);
             break;
-        case IRQ_CMD_PROCESSING:
+        }
+        case IRQ_CMD_PROCESSING: {
         	int16_t min_prio = IRQ_MAX_PRIO,min_index = -1;
     		for(uint8_t i=0;i<IRQ_INTERRUPTS_SUM;i++) { //本来应该是分组求和并行，但是这样会导致代码量爆炸，所以最终我还是用for循环吧
         		if(controller->registered_interrupts[i].prio < min_prio && 
@@ -179,6 +177,8 @@ void device_start(PWOLF_CPU_BUS_DEVICE* pdevice) {
                 controller->regs[IRQ_CONTROLLER_DEVICE_STAT_REG_ADDR] = 1;
             }
             break;
+        }
+
     }
     if(controller->int_valid_flag) {
         cpu->ecall_controller->external_irq = 1;

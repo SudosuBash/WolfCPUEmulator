@@ -42,7 +42,7 @@ void memory(WOLF_CPU* cpu) {
                         ICODE_EXFLAG_MOV_MEM2(cpu->temp_data_reg.ExFlag)
                     ),cpu->temp_data_reg.valC);
                 //大端转换成小端，获得的小端转回来
-                stat =  controller->rd_mmu(&cpu->mmu,addr,be);
+                stat =  controller->rd_mmu(&cpu->mmu,addr,be,0);
                 cpu->temp_data_reg.valC = GET_INT_FROM_4_BYTES_L(stat.data);
             }
             if(stat.stat != BCR_RAM_ERR_OK) {
@@ -57,7 +57,7 @@ void memory(WOLF_CPU* cpu) {
             //M[valC] <- valA;
         case ICODE_POPF:
         case ICODE_POP: {
-            MMU_STATUS stat = controller->rd_mmu(&cpu->mmu,rd_addr,be);
+            MMU_STATUS stat = controller->rd_mmu(&cpu->mmu,rd_addr,be,0);
             if(stat.stat != BCR_RAM_ERR_OK) {
                 cpu->ecall_controller->ecaller(&cpu->ecall_controller,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(stat.stat),rd_addr);
                 cpu->temp_data_reg.noexception = 0;
@@ -80,4 +80,5 @@ void memory(WOLF_CPU* cpu) {
         }
     }
 CPU_MEM_END_STATUS:
+    return;
 }

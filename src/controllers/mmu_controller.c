@@ -6,12 +6,20 @@
 #include <tools/endian.h>
 typedef struct {
     uint32_t addr;
-    uint8_t stat:4;
-    uint8_t cache_open:1;
+    BCR_STATUS stat;
 } WOLF_PADDR_GET;
 extern BIOS_FILE bf;
 
-WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
+static inline BCR_STATUS check_status(WOLF_CPU* cpu,uint32_t pde,CPU_MMU_BEHAVIOR behavior) {
+    uint8_t access = PDE_GET_ACCESS(pde);
+    if(!access && !IS_IN_KERN_MODE(cpu)) return BCR_PAGE_STAT_ACCESS_DENIED;
+    uint8_t exec = PDE_GET_PERMISSION(pde);
+    if(!exec && behavior.code) return BCR_PAGE_STAT_NOT_EXEC;
+    uint8_t prepared = PDE_GET_PREPARED(pde);
+    if(!prepared) return BCR_PAGE_STAT_PAGE_FAULT;
+    return BCR_RAM_ERR_OK;
+}
+WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr,CPU_MMU_BEHAVIOR cpu_behavior) {
     WOLF_PADDR_GET res = {0};
     PWOLF_MEM_CONTROLLER* controller = &cpu->mem_controller;
 
@@ -22,15 +30,31 @@ WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr) {
         uint16_t pde = (vaddr >> VADDR_OFFSET_PDE);
 
         uint32_t page_base_address = cpu->spe_regs.pg_mode_base_addr_reg;
-        RAM_RD_STATUS stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pde,0b1111);
-        res.stat = BCR_RAM_ERR;
-
-        page_base_address = GET_INT_FROM_4_BYTES_L(stat.data.offset4);
-
-        //还得加权限管理，计算页表位置等，这个以后再写
-        stat = (*controller)->rd_ram_4b(controller,page_base_address + BCR_PAGE_TABLE_ITEM_LENG * pte,0b1111);
-        res.stat = BCR_RAM_ERR;
-        if(res.stat != 0) return res;
+        RAM_RD_STATUS stat = (*controller)->rd_ram_4b(controller,page_base_address + (pde << 2),0b1111);
+        res.stat = Through8(stat.dmem_error,BCR_RAM_ERR_DMEM_ERROR);
+        if(res.stat != BCR_RAM_ERR_OK) return res;
+        //如果内存本身就获取失败，那么直接返回内存获取失败的状态就好了
+        uint8_t prepared = PDE_GET_PREPARED(GET_INT_FROM_4_BYTES_L(stat.data.offset4));
+        if(!prepared) {
+            res.stat = BCR_PAGE_STAT_PAGE_FAULT;
+            return res;
+        }
+        //页目录表只负责检查是否准备好，页表需要检查全部的权限
+        page_base_address = PDE_GET_OFFSET(GET_INT_FROM_4_BYTES_L(stat.data.offset4)) << 12; 
+        //二级页表位置的物理基址
+        //page_base_address | (pte << 2): 计算出二级页表的位置
+        stat = (*controller)->rd_ram_4b(controller,page_base_address | (pte << 2),0b1111);
+        res.stat = Through8(stat.dmem_error,BCR_RAM_ERR_DMEM_ERROR);
+        if(res.stat != BCR_RAM_ERR_OK) return res;
+        //如果内存本身就获取失败，那么直接返回内存获取失败的值就好了
+        uint32_t pdeitem = GET_INT_FROM_4_BYTES_L(stat.data.offset4);
+        //页表内容
+        res.stat = check_status(cpu,pdeitem,cpu_behavior);
+        //检查权限，不为0代表出错
+        if(res.stat != BCR_RAM_ERR_OK) return res; //检查权限失败,返回错误代码
+        uint32_t base_addr = PDE_GET_OFFSET(pdeitem) << 12; //物理内存基址
+        res.addr = base_addr | offset; //加上偏移
+        return res;
     }
     res.addr = paddr; 
     return res;
@@ -40,7 +64,8 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     MMU_STATUS res1 = {0};
     WOLF_CPU_MMU_CONTROLLER* controller = *pmmu;
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
-    WOLF_PADDR_GET paddr = paddr_get(cpu,addr);
+    CPU_MMU_BEHAVIOR behavior = {.code = 0,.read = 0};
+    WOLF_PADDR_GET paddr = paddr_get(cpu,addr,behavior);
     if((paddr.addr & (BE_ALIGN(data.be))) != 0) { //物理内存地址要求4字节对齐
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
@@ -49,12 +74,12 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     if(paddr.addr < BASE_MMIO_ADDR) { //访问内存 
         RAM_WR_STATUS stat = cpu->mem_controller->wr_ram(&cpu->mem_controller,paddr.addr,data.data,data.be);
         if(stat.dmem_error) {
-            res1.stat = BCR_RAM_ERR;
+            res1.stat = BCR_RAM_ERR_DMEM_ERROR;
             return res1;
         }
         RAM_RD_STATUS stat2 = cpu->mem_controller->rd_ram(&cpu->mem_controller,paddr.addr);
         if(stat2.dmem_error) {
-            res1.stat = BCR_RAM_ERR;
+            res1.stat = BCR_RAM_ERR_DMEM_ERROR;
             return res1;
         }
         cache->ld_l2_cache(cpu->cache2,paddr.addr,stat2.data.offset);
@@ -68,7 +93,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         COPY_BYTE_4_ARRAY(bits.data,data.data);
         uint8_t status = controller->send_data(&cpu->bus,paddr.addr,bits);
         if(status == BUS_STATUS_ERROR) {
-            res1.stat = BCR_RAM_ERR;
+            res1.stat = BCR_RAM_ERR_DMEM_ERROR;
             return res1;
         }
         if(status == BUS_STATUS_TIMEOUT) {
@@ -80,7 +105,7 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
     } else if(paddr.addr < BASE_BIOS_ADDR) { //访问MMU，简化逻辑不单独设计一个元件了
         uint32_t pos_addr = (paddr.addr - BASE_MMU_ADDR) >> 2;
         if(pos_addr >= MMU_CONTROLLER_REGS * sizeof(uint32_t)) {
-            res1.stat = BCR_RAM_ERR_REG_OUT_OF_RANGE;
+            res1.stat = BCR_RAM_ERR_BUS_ERROR;
             return res1;
         }
         COPY_BYTE_4_ARRAY_WITH_BE(&controller->regs[pos_addr],data.data,data.be);
@@ -113,21 +138,23 @@ MMU_STATUS mmu_memory_wr_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,MMU_DATA
         //一次设备枚举包含两个阶段，一个是更新设备总线位置，一个是更新设备的bar
 
     } else { //尝试读写BIOS，直接ACCESS DENIED
-        res1.stat = BCR_RAM_ERR_ACCESS_DENIED;
+        res1.stat = BCR_RAM_ERR_BUS_ERROR;
     }
     return res1;
 }
 
-MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be) {
+MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t be,uint8_t fetch) {
     WOLF_CPU* cpu = get_parent_struct(pmmu,WOLF_CPU,mmu);
     WOLF_CPU_MMU_CONTROLLER* controller = *pmmu;
     MMU_STATUS res1 = {0};
-    WOLF_PADDR_GET paddr = paddr_get(cpu,addr);
+
+    CPU_MMU_BEHAVIOR behavior = {.code = fetch,.read = 1};
+    WOLF_PADDR_GET paddr = paddr_get(cpu,addr,behavior);
     if(paddr.stat != 0) {
         res1.stat = paddr.stat;
         return res1;
     }
-    if(paddr.addr & (BE_ALIGN(be)) != 0) { 
+    if((paddr.addr & (BE_ALIGN(be))) != 0) { 
         res1.stat = BCR_RAM_ERR_ALIGN;
         return res1;          
     }
@@ -147,7 +174,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
             return res1;
         }
         RAM_RD_STATUS stat = cpu->mem_controller->rd_ram(&cpu->mem_controller,paddr.addr);
-        res1.stat = Through32(stat.dmem_error,BCR_RAM_ERR);
+        res1.stat = Through32(stat.dmem_error,BCR_RAM_ERR_DMEM_ERROR);
         if(res1.stat != BCR_RAM_ERR_OK) {
             return res1;
         }
@@ -161,7 +188,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         bits.read_write = BUS_RW_READ;
         bits = controller->recv_data(&cpu->bus,paddr.addr,bits);
         if(bits.status == BUS_STATUS_ERROR) {
-            res1.stat = BCR_RAM_ERR;
+            res1.stat = BCR_RAM_ERR_BUS_ERROR;
             return res1;
         }
         if(bits.status == BUS_STATUS_TIMEOUT) {
@@ -172,21 +199,14 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
     } else if(paddr.addr < BASE_BIOS_ADDR) { //访问MMU控制器的设备获取部分
         uint32_t pos_addr = paddr.addr - BASE_MMU_ADDR;
         if(pos_addr >= MMU_CONTROLLER_REGS * sizeof(uint32_t)) {
-            res1.stat = BCR_RAM_ERR_REG_OUT_OF_RANGE;
-            return res1;
-        }
-        //摆大烂设计
-        //读取MMU的设备获取寄存器必须4字节对齐，否则触发对齐异常
-        if(be != 0b1111) { 
-            res1.stat = BCR_RAM_ERR_ALIGN;
+            res1.stat = BCR_RAM_ERR_BUS_ERROR;
             return res1;
         }
         uint32_t data = controller->regs[pos_addr];
-        COPY_BYTE_4_ARRAY(res1.data,&controller->regs[pos_addr]);
-        // res1.data = controller->regs[pos_addr >> 2];
+        COPY_BYTE_4_ARRAY_WITH_BE(res1.data,&controller->regs[pos_addr],be);
     } else {
         if(!IS_IN_KERN_MODE(cpu)) {
-            res1.stat = BCR_RAM_ERR_ACCESS_DENIED;
+            res1.stat = BCR_RAM_ERR_BUS_ERROR;
             return res1;
         }
         

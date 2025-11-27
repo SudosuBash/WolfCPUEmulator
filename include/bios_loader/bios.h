@@ -8,4 +8,5 @@ typedef struct {
 } BIOS_FILE;
 
 void load_bios();
+void free_bios();
 #endif

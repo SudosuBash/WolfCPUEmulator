@@ -110,11 +110,12 @@ void execute(WOLF_CPU* cpu) {
             break;
         case ICODE_ZWC: {
             uint32_t targetVal = Through32(cpu->temp_data_reg.ExFlag & 1, ZWC_16(cpu->temp_data_reg.valA)) |
-                Through32(!cpu->temp_data_reg.ExFlag & 1,ZWC_32(cpu->temp_data_reg.valA));
+                Through32(!(cpu->temp_data_reg.ExFlag & 1),ZWC_32(cpu->temp_data_reg.valA));
             cpu->temp_data_reg.valB = targetVal;
             break;
         }   
     }
 
 CPU_EXEC_END_STATUS:
+    return;
 }

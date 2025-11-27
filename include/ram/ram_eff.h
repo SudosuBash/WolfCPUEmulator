@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <global.h>
 
-#define RAM_SIZE 4294967296
+#define RAM_SIZE 2147483648
 
 #define RAM_OFFSET_BITS 14
 #define RAM_PTE_BITS 8

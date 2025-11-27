@@ -22,8 +22,8 @@ struct BREAKPOINT_CONTROLLER{
     del_breakpoint_func del_breakpoint;
     get_breakpoint_func get_breakpoint;
     visit_memory_func visit_memory;
-    HASHTABLE_ELEMENT hashtable[32768];
-} ;
+    HASHTABLE_ELEMENT* hashtable[32768];
+};
 
 uint32_t break_execution(WOLF_CPU* cpu);
 

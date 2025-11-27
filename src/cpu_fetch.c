@@ -179,7 +179,7 @@ static inline uint8_t getExFunc(uint8_t type,uint8_t icode,uint32_t data) {
 void fetch_data(WOLF_CPU* cpu) {
     PWOLF_CPU_ECALL_CONTROLLER* ecall_ctrler = &cpu->ecall_controller;
     PWOLF_CPU_MMU_CONTROLLER* ctrler = &(cpu->mmu);
-    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc,0b1111);
+    MMU_STATUS mmu_res = (*ctrler)->rd_mmu(ctrler,cpu->pc,0b1111,1);
     if(mmu_res.stat != 0) {
         cpu->ecall_controller->ecaller(ecall_ctrler,ECALL_MACHINE_PROBLEM,MMU_CONVERT_TO_EREASON(mmu_res.stat),cpu->temp_data_reg.instruction);
         cpu->temp_data_reg.noexception = 0;
@@ -211,4 +211,5 @@ void fetch_data(WOLF_CPU* cpu) {
         cpu->temp_data_reg.noexception = 0;
     }
 WCPU_FETCH_DATA_END:
+    return;
 } 

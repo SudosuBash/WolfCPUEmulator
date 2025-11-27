@@ -4,6 +4,14 @@
 #include <logics/logic_alg.h>
 #include <global.h>
 
+
+#define SWAP_UINT8(a,b) \
+    do {\
+        uint8_t num = *(a); \
+        *(a) = *(b); \
+        *(b) = (num); \
+    }while(0)
+
 #if defined(__LITTLE_ENDIAN__) || defined(_LITTLE_ENDIAN) || defined(LITTLE_ENDIAN) || \
     (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define IS_LITTLE_ENDIAN 1
@@ -17,6 +25,15 @@
 #define SEP_INT_FOR_4_BYTES_L(intval) \
     ((intval)) & 0xff,((intval) >> 8) & 0xff,((intval) >> 16) & 0xff,(intval) >> 24
 
+#if !IS_LITTLE_ENDIAN 
+#define CAST_FROM_LSB_TO_ORI_ARCH(arr) \
+    do {\
+        SWAP_UINT8(&(arr)[0],&(arr)[3]); \
+        SWAP_UINT8(&(arr)[1],&(arr)[2]); \
+    } while(0)
+#else
+#define CAST_FROM_LSB_TO_ORI_ARCH(arr) do {} while(0)
+#endif
 
 #define SEP_INT_FOR_2_BYTES_L(intval) \
     ((intval)) & 0xff,((intval) >> 8) & 0xff

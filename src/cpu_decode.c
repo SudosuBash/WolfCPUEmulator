@@ -40,4 +40,5 @@ void decode(WOLF_CPU* cpu) {
     cpu->temp_data_reg.valB = val2;
     cpu->temp_data_reg.valC = getiData(cpu->temp_data_reg.icode,cpu->temp_data_reg.valC,cpu->temp_data_reg.ExCond);
 CPU_DECODE_END_STATUS:
+    return;
 }

@@ -32,6 +32,8 @@ void init_env() {
     init_break_execution();
     load_bios();
     start_cpu(cpu);
+    free_break_execution();
+    free_bios();
     free_cpu(&cpu);
 }
 
@@ -117,7 +119,7 @@ uint32_t getRegVal(WOLF_CPU* cpu,uint8_t lreg) {
         case CPU_REG_ECALL_EARG:
             return cpu->ecall_regs.eargs;
     }
-    
+    return 0;
 }
 
 

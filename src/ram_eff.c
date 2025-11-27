@@ -55,7 +55,6 @@ RAM_OPERATOR_RESULT operate(PRAM_INTERFACE_UNIT* punit,RAM_IN_ARGS input) {
 
 RAM_INTERFACE_UNIT* init_ram_unit() {
     RAM_INTERFACE_UNIT* unit = (RAM_INTERFACE_UNIT*) calloc(1,sizeof(RAM_INTERFACE_UNIT));
-    memset(unit,0,sizeof(unit));
     unit->operatorFunc = operate;
     return unit;
 }

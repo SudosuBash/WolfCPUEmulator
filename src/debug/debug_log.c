@@ -26,7 +26,7 @@ static void print_reg_info(WOLF_CPU* cpu) {
         cpu->gen_regs.r[12],
         cpu->gen_regs.r[13],
         cpu->gen_regs.r[14]);
-    printf("PC: 0x%08x    %s  %s  %s  %s  %s  %s  %s\n",
+    printf("PC: 0x%08x    %s  %s  %s  %s  %s  %s  %s  %s\n",
         cpu->pc,
         IS_IN_KERN_MODE(cpu) ? "KR" : "UR",
         IS_PGO_ON(cpu) ? "PG": "NG",
@@ -39,27 +39,25 @@ static void print_reg_info(WOLF_CPU* cpu) {
 }
 
 static void breakpointSet(BREAKPOINT_CONTROLLER* controller,uint32_t pc) {
-    uint32_t index = pc & 32767;
-    if(controller->hashtable[index].break_pc == pc) {
-        printf("WARNING: Breakpoint at 0x%08x already exists.\n",pc);
-        return;
-    }
-    HASHTABLE_ELEMENT* next_ele = controller->hashtable[index].next;
+    uint32_t index = pc & 32767; //div和and指令周期差15倍左右，也是为什么用and
+    HASHTABLE_ELEMENT* next_ele = controller->hashtable[index];
     if(next_ele == NULL) {
         HASHTABLE_ELEMENT* target_ele = (HASHTABLE_ELEMENT*)calloc(1,sizeof(HASHTABLE_ELEMENT));
-        controller->hashtable[index].next = target_ele;
+        controller->hashtable[index] = target_ele;
         target_ele->break_pc = pc;
         target_ele->next = NULL;
     } else {
-        while(next_ele->next != NULL) {
+        HASHTABLE_ELEMENT* prev_ele = next_ele;
+        while(next_ele != NULL) {
             if(next_ele->break_pc == pc) {
                 printf("WARNING: Breakpoint at 0x%08x already exists.\n",pc);
                 return;
             }
+            prev_ele = next_ele;
             next_ele = next_ele->next;
         }
         HASHTABLE_ELEMENT* target_ele = (HASHTABLE_ELEMENT*)calloc(1,sizeof(HASHTABLE_ELEMENT));
-        next_ele->next = target_ele;
+        prev_ele->next = target_ele;
         target_ele->break_pc = pc;
         target_ele->next = NULL;
     }
@@ -67,10 +65,7 @@ static void breakpointSet(BREAKPOINT_CONTROLLER* controller,uint32_t pc) {
 }
 static HASHTABLE_ELEMENT* breakpointGet(BREAKPOINT_CONTROLLER* controller,WOLF_CPU* cpu,uint32_t pc) {
     uint32_t index = pc & 32767;
-    if(controller->hashtable[index].break_pc == pc) {
-        return &controller->hashtable[index];
-    }
-    HASHTABLE_ELEMENT* next_ele = controller->hashtable[index].next;
+    HASHTABLE_ELEMENT* next_ele = controller->hashtable[index];
     while(next_ele != NULL) {
         if(next_ele->break_pc == pc) {
             return next_ele;
@@ -83,7 +78,7 @@ static HASHTABLE_ELEMENT* breakpointGet(BREAKPOINT_CONTROLLER* controller,WOLF_C
 
 static uint8_t exec_debug_cmd(CMD_PARSER_MANAGER* manager, int argc,char** argv) {
     if(argc != 2) {
-        printf("WARNING: You have put an unrecognized command.Here is the help doc.\n");
+        printf("E: Unrecognized Command.Here is the help doc.\n");
         return trigger_command(manager,"h","help");
     }
     return trigger_command(manager,argv[0],argv[1]);
@@ -111,6 +106,7 @@ static CMD_PARSER_OBJECT bp_cmd(CMD_PARSER_MANAGER* manager) {
     };
     return obj;
 }
+
 
 static void init_debug_cmd_system() {
     register_command(&cmd_manager, bp_cmd(&cmd_manager));
@@ -164,18 +160,18 @@ void init_break_execution() {
     controller.get_breakpoint = breakpointGet;
 
     init_debug_cmd_system();
-    controller.set_breakpoint(&controller,0xfffffe00); //机器执行第一条指令时中断
+    controller.set_breakpoint(&controller,BASE_BIOS_ADDR); //机器执行第一条指令时中断
 }
 
 void free_break_execution() {
     for(int i=0;i<32768;i++) {
-        HASHTABLE_ELEMENT* ele = controller.hashtable[i].next;
+        HASHTABLE_ELEMENT* ele = controller.hashtable[i];
         while(ele != NULL) {
             HASHTABLE_ELEMENT* next_ele = ele->next;
             free(ele);
             ele = next_ele;
         }
-        controller.hashtable[i].next = NULL;
+        controller.hashtable[i] = NULL;
     }
 }
 
