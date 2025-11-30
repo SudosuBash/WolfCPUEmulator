@@ -4,12 +4,13 @@
 #include <bios_loader/bios.h>
 
 #include <tools/endian.h>
+#include <commands/commands.h>
 typedef struct {
     uint32_t addr;
     BCR_STATUS stat;
 } WOLF_PADDR_GET;
-extern BIOS_FILE bf;
 
+extern CMD_CONFIGURATIONS config;
 static inline BCR_STATUS check_status(WOLF_CPU* cpu,uint32_t pde,CPU_MMU_BEHAVIOR behavior) {
     uint8_t access = PDE_GET_ACCESS(pde);
     if(!access && !IS_IN_KERN_MODE(cpu)) return BCR_PAGE_STAT_ACCESS_DENIED;
@@ -24,7 +25,7 @@ WOLF_PADDR_GET paddr_get(WOLF_CPU* cpu,uint32_t vaddr,CPU_MMU_BEHAVIOR cpu_behav
     PWOLF_MEM_CONTROLLER* controller = &cpu->mem_controller;
 
     uint32_t paddr = vaddr; //指哪打哪
-    if(IS_PGO_ON(cpu)) { //尚未完善
+    if(IS_PGO_ON(cpu)) {
         uint16_t offset = vaddr & VADDR_OFFSET_BYTE_MASK;
         uint16_t pte = (vaddr >> VADDR_OFFSET_PTE) & VADDR_OFFSET_PTE_MASK;
         uint16_t pde = (vaddr >> VADDR_OFFSET_PDE);
@@ -211,7 +212,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         }
         
         uint16_t relaAddr = (paddr.addr - BASE_BIOS_ADDR);
-        COPY_BYTE_4_ARRAY(res1.data,&(bf.file[relaAddr]));
+        COPY_BYTE_4_ARRAY(res1.data,&(config.bios.file[relaAddr]));
     }
     return res1;
 }

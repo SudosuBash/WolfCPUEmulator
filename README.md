@@ -7,3 +7,15 @@ toyOS 日后将会基于此模拟器进行彻底重写。
 # 注意:给研究者/源码阅读者的一点说明
 由于项目日后会考虑迁移到 Turing Complete(首选) 或者 Verilog, logisim 等平台中，所以可能有些代码可能会显得很奇怪和刻意.<br>
 如果在阅读源码的过程中觉得有些代码很奇怪的话，不用觉得奇怪，这很正常。
+# 构建
+在附带 GNU 工具的系统上(包括Windows)，执行以下shell命令
+```shell
+cd WolfCPUEmulator
+make
+```
+即可在根目录下生成一个名为 <strong>emulator</strong> 的可执行文件。
+
+# 目前支持的选项
+emu.exe -lb {bios file} : 选择加载的bios文件
+        -d {on/off} : 是否开启Debug模式
+        -help {} : 加载帮助文档

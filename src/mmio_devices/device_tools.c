@@ -63,6 +63,7 @@ uint8_t write_reg_general(WOLF_CPU_BUS_CONTROLLER* controller,uint32_t addr,uint
     // regs[rel_addr1] = Mux8(wri_1,regs[rel_addr1], GET_DATA_1(data));
     // regs[rel_addr2] = Mux8(wri_2,regs[rel_addr2], GET_DATA_2(data));
     // regs[rel_addr3] = Mux8(wri_3,regs[rel_addr3], GET_DATA_3(data));
+    COPY_BYTE_4_ARRAY_SELECTED_WITH_BE(&regs[rel_addr],controller->data_cmd_collection.data,be);
     pthread_mutex_lock(&controller->device_request_mutex);
 
     controller->data_cmd_collection.status = BUS_STATUS_SUCCESS;

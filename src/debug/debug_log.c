@@ -6,6 +6,7 @@
 static BREAKPOINT_CONTROLLER controller;
 static CMD_PARSER_MANAGER cmd_manager;
 
+extern CMD_CONFIGURATIONS config;
 static void print_reg_info(WOLF_CPU* cpu) {
     printf("========== REGISTERS ==========\n");
     printf("R1: 0x%08x,R2: 0x%08x,R3: 0x%08x,R4: 0x%08x,R5: 0x%08x\n",
@@ -151,7 +152,7 @@ uint32_t break_execution(WOLF_CPU* cpu) {
     while(input_cmd() != DEBUG_CMD_STATUS_CONTINUE) {
         printf("\n");
         printf("Enter command, type 'c' to continue: ");
-    };
+    }
     return 0;
 }
 
@@ -160,7 +161,8 @@ void init_break_execution() {
     controller.get_breakpoint = breakpointGet;
 
     init_debug_cmd_system();
-    controller.set_breakpoint(&controller,BASE_BIOS_ADDR); //机器执行第一条指令时中断
+    if(config.debug) 
+        controller.set_breakpoint(&controller,BASE_BIOS_ADDR); //机器执行第一条指令时中断
 }
 
 void free_break_execution() {

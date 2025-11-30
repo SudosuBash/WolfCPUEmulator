@@ -3,7 +3,7 @@
 #include <tools/files.h>
 #include <bios_loader/bios.h>
 
-extern BIOS_FILE bf;
+extern CMD_CONFIGURATIONS config;
 static uint8_t cmd_execer(char* args) {
     uint8_t* buf = read_bin(args,1024);
     if(buf == NULL) {
@@ -13,7 +13,7 @@ static uint8_t cmd_execer(char* args) {
     BIOS_FILE file;
     file.size = 1024;
     file.file = buf;
-    bf = file;
+    config.bios = file;
     printf("[INFO] Successfully loaded BIOS Program.\n");
     return 0;
 }

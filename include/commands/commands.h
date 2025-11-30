@@ -2,7 +2,7 @@
 #define _CMD_PARSER_H
 #include <stdint.h>
 #include <stdio.h>
-
+#include <bios_loader/bios.h>
 typedef uint8_t (*cmd_exec)(char* arg);
 typedef struct {
     char cmd[30];
@@ -14,6 +14,11 @@ typedef struct {
     CMD_PARSER_OBJECT objects[101];
     uint8_t cmdLen;
 } CMD_PARSER_MANAGER;
+
+typedef struct {
+    uint8_t debug;
+    BIOS_FILE bios;
+} CMD_CONFIGURATIONS;
 
 void register_command(CMD_PARSER_MANAGER* manager,CMD_PARSER_OBJECT object);
 uint8_t trigger_command(CMD_PARSER_MANAGER* manager,char* cmd,char* arg);

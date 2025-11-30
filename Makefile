@@ -3,7 +3,7 @@ CFLAGS = -g -Iinclude
 LDFLAGS = 
 SRCS = main.c $(wildcard src/*.c) $(wildcard src/**/*.c)
 OBJS = $(SRCS:.c=.o)
-TARGET = app.exe
+TARGET = emulator.exe
 
 all: $(TARGET)
 
