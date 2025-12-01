@@ -26,7 +26,7 @@ typedef struct {
 }L1_CACHE_RD_GROUP_RES;
 
 typedef struct {
-    uint8_t offset[L1_SIZE];
+    uint8_t offset[L2_SIZE];
     CACHE_RD_STAT stat;
     uint8_t relaAddr;
 }L2_CACHE_RD_GROUP_RES;

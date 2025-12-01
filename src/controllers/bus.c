@@ -5,7 +5,7 @@
 #include <global.h>
 #include <tools/endian.h>
 #include <unistd.h>
-
+#include <errno.h>
 uint8_t bus_send_data(PWOLF_CPU_BUS_CONTROLLER* pbus_ctrl, uint32_t addr,BUS_SEND_DATA data) {
     WOLF_CPU_BUS_CONTROLLER* bus_ctrl = *pbus_ctrl;
 

@@ -66,7 +66,7 @@ WOLF_CPU* init_cpu() {
     cpu->mmu = mmu;
     cpu->cache1 = l1_group;
     cpu->cache2 = l2_group;
-    cpu->clock_execution = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_init(&cpu->clock_execution,NULL);
     cpu->pc = BASE_BIOS_ADDR; //刚开始初始化pc为BASE_BIOS_ADDR，转去执行BIOS的程序
     return cpu;
 

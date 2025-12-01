@@ -91,7 +91,7 @@ void destroy_stdo_device(PWOLF_MMIO_STDO_DEVICE* pstdo_device) { //设备结束�
          pthread_mutex_destroy(&(stdo_device->stdio_lock));
 
         if (stdo_device->bus_device != NULL) {
-            pthread_mutex_destroy(&(stdo_device->bus_device->device_op_signal));
+            pthread_cond_destroy(&(stdo_device->bus_device->device_op_signal));
             free(stdo_device->bus_device);
         }
 

@@ -172,7 +172,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         if(resl2.stat.hit) {
             COPY_BYTE_4_ARRAY_WITH_BE(res1.data,&(resl2.offset[resl2.relaAddr]),be);
             cache->ld_l1_cache(cpu->cache1,paddr.addr,(&resl2.offset[(resl2.relaAddr >> 2) << 2]));
-            return res1;
+            goto MMU_MEMORY_END_SIGN;
         }
         RAM_RD_STATUS stat = cpu->mem_controller->rd_ram(&cpu->mem_controller,paddr.addr);
         res1.stat = Through32(stat.dmem_error,BCR_RAM_ERR_DMEM_ERROR);
@@ -214,6 +214,7 @@ MMU_STATUS mmu_memory_rd_f(PWOLF_CPU_MMU_CONTROLLER* pmmu,uint32_t addr,uint8_t 
         uint16_t relaAddr = (paddr.addr - BASE_BIOS_ADDR);
         COPY_BYTE_4_ARRAY(res1.data,&(config.bios.file[relaAddr]));
     }
+MMU_MEMORY_END_SIGN:
     return res1;
 }
 

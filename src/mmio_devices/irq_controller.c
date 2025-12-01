@@ -228,7 +228,7 @@ void destroy_irq_device(PWOLF_IRQ_CONTROLLER* pirq_device) { //设备结束运�
     pthread_mutex_destroy(&(irq_device->device_rwlock));
     if(irq_device != NULL) {
         if (irq_device->bus_device != NULL) {
-            pthread_mutex_destroy(&(irq_device->bus_device->device_op_signal));
+            pthread_cond_destroy(&(irq_device->bus_device->device_op_signal));
             free(irq_device->bus_device);
         }
         free(irq_device);

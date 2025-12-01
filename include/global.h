@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <logics/logic_alg.h>
+#include <stddef.h>
 #define CPU_OPLENG 32
 
 #define L1_TAG 18

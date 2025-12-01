@@ -2,7 +2,7 @@
 #include <cpu.h>
 #include <stdio.h>
 #include <commands/commands.h>
-
+#include <errno.h>
 static BREAKPOINT_CONTROLLER controller;
 static CMD_PARSER_MANAGER cmd_manager;
 
@@ -86,6 +86,7 @@ static uint8_t exec_debug_cmd(CMD_PARSER_MANAGER* manager, int argc,char** argv)
 }
 
 static uint8_t bp_cmd_execer(char* args) {
+    errno = 0;
     uint64_t addr = strtoul(args,NULL,16);
     int err = errno;
     if(errno != 0) {
