@@ -22,6 +22,7 @@
 #define L2_SIZE (1 << L2_OFFSET)
 #define L2_OFFSET_MASK L2_SIZE-1
 
+#define GET_DATA_BIT_VALUE(data,bit) (((data) >> (bit)) & 1)
 #define CACHE_L1_GROUPS 512
 #define CACHE_L2_GROUPS 1024
 

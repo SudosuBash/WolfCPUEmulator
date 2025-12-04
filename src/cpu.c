@@ -16,7 +16,7 @@ void start_cpu(WOLF_CPU *cpu) {
         access_check(cpu);
         decode(cpu);
         execute(cpu);
-        ecall_proc(cpu);
+        ecall_proc(cpu); 
         memory(cpu);
         writeback(cpu);
         update_PC(cpu);

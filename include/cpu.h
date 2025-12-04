@@ -73,9 +73,8 @@
 //I类
 #define ICODE_RET 0b100100
 //R类
-#define ICODE_RERE 0b100110
+#define ICODE_RERE 0b111000
 //R类
-//lier: Load IRQ EXCEPTION Reason %r1
 
 //BCR控制器
 #define ICODE_RBCR 0b110000
@@ -98,7 +97,7 @@
 //R类
 #define ICODE_HLT 0b110111
 
-#define ICODE_REARG 0b001001
+#define ICODE_REARG 0b111001
 //R类
 #define ICODE_RET_EXFUNC 0x01
 #define ICODE_IRET_EXFUNC 0x10
@@ -210,6 +209,8 @@
 #define ICODE_EXFLAG_MOV_MEM1(exflag) ((exflag) >> 1) & 1
 #define ICODE_EXFLAG_MOV_MEM2(exflag) ((exflag) & 1)
 
+#define KERN_MODE 0
+#define USER_MODE 1
 typedef struct {
     uint8_t irtype:1;
     uint8_t icode:6;
